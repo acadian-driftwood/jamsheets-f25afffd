@@ -27,6 +27,7 @@ export default function TeamMembersPage() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("member");
   const [sending, setSending] = useState(false);
+  const [resendingId, setResendingId] = useState<string | null>(null);
 
   const { data: members, isLoading } = useQuery({
     queryKey: ["org-members", orgId],
@@ -82,6 +83,29 @@ export default function TeamMembersPage() {
       toast.error(e.message || "Failed to send invite");
     } finally {
       setSending(false);
+    }
+  };
+
+  const handleResend = async (inviteId: string, email: string) => {
+    if (!orgId) return;
+    setResendingId(inviteId);
+    try {
+      const { data, error } = await supabase.functions.invoke("team-invites", {
+        body: {
+          action: "resend-invite",
+          inviteId,
+          organizationId: orgId,
+          orgName: currentOrg?.organization.name,
+          inviterName: user?.user_metadata?.full_name || user?.email,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) { toast.error(data.error); return; }
+      toast.success(`Invite resent to ${email}`);
+    } catch (e: any) {
+      toast.error(e.message || "Failed to resend invite");
+    } finally {
+      setResendingId(null);
     }
   };
 
@@ -144,7 +168,21 @@ export default function TeamMembersPage() {
                   <p className="text-sm font-medium truncate">{inv.email}</p>
                   <p className="text-xs text-muted-foreground">Invited · {inv.role}</p>
                 </div>
-                <StatusChip label="Pending" variant="warning" />
+                <div className="flex items-center gap-2 shrink-0">
+                  <StatusChip label="Pending" variant="warning" />
+                  {isAdmin && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-7 w-7"
+                      disabled={resendingId === inv.id}
+                      onClick={() => handleResend(inv.id, inv.email)}
+                      title="Resend invite"
+                    >
+                      <RefreshCw className={`h-3.5 w-3.5 ${resendingId === inv.id ? "animate-spin" : ""}`} />
+                    </Button>
+                  )}
+                </div>
               </div>
             ))}
           </div>

@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { InfoCard } from "@/components/shared/InfoCard";
 import { EditTourModal } from "@/components/modals/EditTourModal";
 import { StatusChip } from "@/components/shared/StatusChip";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Button } from "@/components/ui/button";
-import { Calendar, Plus, Music, Plane, Car, Coffee, Trash2, MapPin, Pencil } from "lucide-react";
+import { Plus, Music, Plane, Car, Coffee, MapPin, Pencil, ChevronRight } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useShows, useTourTimeline } from "@/hooks/useData";
 import { CreateShowModal } from "@/components/modals/CreateShowModal";
@@ -15,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/contexts/OrgContext";
 import { format, parseISO } from "date-fns";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 export default function TourDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -57,11 +57,7 @@ export default function TourDetailPage() {
   const { data: shows, isLoading: showsLoading } = useShows(id);
   const { data: timelineItems } = useTourTimeline(id!);
 
-  const typeIcons: Record<string, typeof Music> = {
-    off_day: Coffee, flight: Plane, rental_pickup: Car, rental_dropoff: Car, driving: MapPin, rental_return: Car,
-  };
-
-  type MergedItem = { id: string; type: string; date: string; title: string; subtitle?: string; meta?: string; showId?: string };
+  type MergedItem = { id: string; type: string; date: string; title: string; subtitle?: string; timeStart?: string; showId?: string };
   const merged: MergedItem[] = [];
 
   shows?.forEach((s) => {
@@ -69,21 +65,48 @@ export default function TourDetailPage() {
   });
 
   timelineItems?.forEach((t) => {
-    merged.push({ id: t.id, type: t.type, date: t.date, title: t.title, subtitle: t.subtitle || undefined, meta: t.time_start || undefined });
+    merged.push({ id: t.id, type: t.type, date: t.date, title: t.title, subtitle: t.subtitle || undefined, timeStart: t.time_start || undefined });
   });
 
   merged.sort((a, b) => a.date.localeCompare(b.date));
 
+  // Group by date
+  const grouped = merged.reduce<Record<string, MergedItem[]>>((acc, item) => {
+    if (!acc[item.date]) acc[item.date] = [];
+    acc[item.date].push(item);
+    return acc;
+  }, {});
+
   const formatDates = () => {
     if (!tour?.start_date) return "";
-    const start = format(parseISO(tour.start_date + "T00:00:00"), "MMM d, yyyy");
+    const start = format(parseISO(tour.start_date + "T00:00:00"), "MMM d");
     if (!tour?.end_date) return start;
     return `${start} – ${format(parseISO(tour.end_date + "T00:00:00"), "MMM d, yyyy")}`;
   };
 
-  const chipVariant = (type: string) => {
-    if (type === "show") return "accent";
-    if (type === "flight") return "accent";
+  const dotColor = (type: string) => {
+    if (type === "show") return "bg-accent";
+    if (type === "flight") return "bg-accent/60";
+    if (type === "driving") return "bg-warning";
+    return "bg-muted-foreground/30";
+  };
+
+  const typeIcon = (type: string) => {
+    if (type === "show") return Music;
+    if (type === "flight") return Plane;
+    if (type === "driving") return MapPin;
+    if (type === "off_day") return Coffee;
+    return Car;
+  };
+
+  const chipLabel = (type: string) => {
+    if (type === "show") return "Show";
+    if (type === "off_day") return "Day off";
+    return type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  };
+
+  const chipVariant = (type: string): "accent" | "warning" | "muted" => {
+    if (type === "show" || type === "flight") return "accent";
     if (type === "driving") return "warning";
     return "muted";
   };
@@ -94,74 +117,123 @@ export default function TourDetailPage() {
         title={tour?.name || "Tour"}
         subtitle={formatDates()}
         back
+        sticky
         action={
-          <div className="flex gap-1">
-            {isPrivileged && (
-              <Button size="icon" variant="ghost" onClick={() => setShowEdit(true)}>
-                <Pencil className="h-4 w-4" />
+          isPrivileged ? (
+            <div className="flex gap-1">
+              <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setShowEdit(true)}>
+                <Pencil className="h-3.5 w-3.5" />
               </Button>
-            )}
-            {isPrivileged && (
-              <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setShowTravel(true)}>
-                <Plus className="h-4 w-4" /> Travel
+              <Button size="sm" variant="outline" className="gap-1 h-8 rounded-xl text-xs" onClick={() => setShowTravel(true)}>
+                <Plus className="h-3 w-3" /> Travel
               </Button>
-            )}
-            <Button size="sm" className="gap-1.5" onClick={() => setShowCreate(true)}>
-              <Plus className="h-4 w-4" /> Show
+              <Button size="sm" className="gap-1 h-8 rounded-xl text-xs" onClick={() => setShowCreate(true)}>
+                <Plus className="h-3 w-3" /> Show
+              </Button>
+            </div>
+          ) : (
+            <Button size="sm" className="gap-1 h-8 rounded-xl text-xs" onClick={() => setShowCreate(true)}>
+              <Plus className="h-3 w-3" /> Show
             </Button>
-            {isPrivileged && (
-              <Button size="icon" variant="ghost" className="text-destructive" onClick={handleDelete}>
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
+          )
         }
       />
 
-      {tour && (
-        <div className="mt-2 flex gap-2 px-4">
-          <StatusChip label={tour.status === "active" ? "Active" : tour.status} variant={tour.status === "active" ? "success" : "muted"} />
-          <StatusChip label={`${shows?.length || 0} shows`} variant="muted" />
-        </div>
-      )}
-
-      <section className="mt-6">
-        <p className="section-title">Timeline</p>
+      <section className="mt-4">
         {showsLoading ? (
           <div className="space-y-2">
-            {[1, 2, 3].map((i) => <div key={i} className="h-20 animate-pulse rounded-xl bg-muted" />)}
+            {[1, 2, 3].map((i) => <div key={i} className="h-16 animate-pulse rounded-2xl bg-muted" />)}
           </div>
         ) : merged.length === 0 ? (
           <EmptyState
             icon={Music}
-            title="Empty timeline"
+            title="Nothing planned yet"
             description="Add shows and travel to build your tour timeline."
-            action={<Button size="sm" onClick={() => setShowCreate(true)}><Plus className="mr-1.5 h-4 w-4" /> Add Show</Button>}
+            action={
+              <Button size="sm" className="rounded-xl" onClick={() => setShowCreate(true)}>
+                <Plus className="mr-1.5 h-3.5 w-3.5" /> Add Show
+              </Button>
+            }
           />
         ) : (
-          <div className="space-y-2">
-            {merged.map((item) => {
-              const Icon = item.type === "show" ? Music : typeIcons[item.type] || Coffee;
-              const chipLabel = item.type === "show" ? "Show" : item.type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-              return (
-                <InfoCard
-                  key={item.id}
-                  title={item.title}
-                  subtitle={item.subtitle}
-                  meta={item.meta}
-                  onClick={item.showId ? () => navigate(`/shows/${item.showId}`) : undefined}
-                  chip={<StatusChip label={chipLabel} variant={chipVariant(item.type)} />}
-                >
-                  <div className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Calendar className="h-3.5 w-3.5" />
-                    <span>{format(parseISO(item.date + "T00:00:00"), "MMM d")}</span>
-                  </div>
-                </InfoCard>
-              );
-            })}
+          <div className="space-y-0">
+            {Object.entries(grouped).map(([date, items]) => (
+              <div key={date}>
+                {/* Date divider */}
+                <p className="date-divider">
+                  {format(parseISO(date + "T00:00:00"), "EEE, MMM d")}
+                </p>
+
+                {/* Timeline items */}
+                <div className="relative ml-3 border-l border-border pl-5 space-y-2 pb-4">
+                  {items.map((item) => {
+                    const Icon = typeIcon(item.type);
+                    const isShow = item.type === "show";
+                    const isOffDay = item.type === "off_day";
+
+                    return (
+                      <div key={item.id} className="relative">
+                        {/* Timeline dot */}
+                        <span
+                          className={cn(
+                            "absolute -left-[calc(1.25rem+5px)] top-3 timeline-dot",
+                            dotColor(item.type)
+                          )}
+                        />
+
+                        {isOffDay ? (
+                          <div className="flex items-center gap-2 py-2 text-sm text-muted-foreground">
+                            <Coffee className="h-3.5 w-3.5" />
+                            <span>Day off</span>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={isShow ? () => navigate(`/shows/${item.showId}`) : undefined}
+                            className={cn(
+                              "w-full rounded-xl border bg-card p-3 text-left transition-all press-scale",
+                              isShow && "active:bg-muted/40"
+                            )}
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-semibold truncate">{item.title}</span>
+                                  <StatusChip label={chipLabel(item.type)} variant={chipVariant(item.type)} />
+                                </div>
+                                {item.subtitle && (
+                                  <p className="text-xs text-muted-foreground truncate mt-0.5">{item.subtitle}</p>
+                                )}
+                                {item.timeStart && (
+                                  <p className="text-[11px] text-muted-foreground mt-0.5">{item.timeStart}</p>
+                                )}
+                              </div>
+                              {isShow && <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/50" />}
+                            </div>
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </section>
+
+      {/* Danger Zone */}
+      {isPrivileged && tour && (
+        <section className="mt-10 rounded-2xl border border-destructive/20 p-4">
+          <p className="text-xs font-semibold text-destructive mb-2">Danger Zone</p>
+          <p className="text-xs text-muted-foreground mb-3">
+            Permanently delete this tour and all its data.
+          </p>
+          <Button size="sm" variant="destructive" className="rounded-xl text-xs" onClick={handleDelete}>
+            Delete Tour
+          </Button>
+        </section>
+      )}
 
       <CreateShowModal open={showCreate} onOpenChange={setShowCreate} defaultTourId={id} />
       {id && <CreateTravelModal open={showTravel} onOpenChange={setShowTravel} tourId={id} />}

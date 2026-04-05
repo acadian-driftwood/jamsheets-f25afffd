@@ -559,6 +559,53 @@ export type Database = {
           },
         ]
       }
+      subscriptions: {
+        Row: {
+          created_at: string
+          current_period_end: string | null
+          id: string
+          organization_id: string
+          plan_tier: Database["public"]["Enums"]["plan_tier"]
+          status: Database["public"]["Enums"]["subscription_status"]
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          trial_ends_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          organization_id: string
+          plan_tier?: Database["public"]["Enums"]["plan_tier"]
+          status?: Database["public"]["Enums"]["subscription_status"]
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          trial_ends_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          organization_id?: string
+          plan_tier?: Database["public"]["Enums"]["plan_tier"]
+          status?: Database["public"]["Enums"]["subscription_status"]
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          trial_ends_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       suppressed_emails: {
         Row: {
           created_at: string
@@ -767,6 +814,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_active_tour_limit: { Args: { _org_id: string }; Returns: boolean }
+      check_member_limit: { Args: { _org_id: string }; Returns: boolean }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -774,6 +823,10 @@ export type Database = {
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
+      }
+      get_org_plan: {
+        Args: { _org_id: string }
+        Returns: Database["public"]["Enums"]["plan_tier"]
       }
       has_org_role: {
         Args: {
@@ -808,6 +861,13 @@ export type Database = {
     Enums: {
       guest_status: "pending" | "confirmed" | "declined"
       org_role: "owner" | "admin" | "tm" | "member" | "crew" | "readonly"
+      plan_tier: "free" | "band" | "manager"
+      subscription_status:
+        | "active"
+        | "trialing"
+        | "past_due"
+        | "canceled"
+        | "incomplete"
       timeline_item_type:
         | "off_day"
         | "flight"
@@ -945,6 +1005,14 @@ export const Constants = {
     Enums: {
       guest_status: ["pending", "confirmed", "declined"],
       org_role: ["owner", "admin", "tm", "member", "crew", "readonly"],
+      plan_tier: ["free", "band", "manager"],
+      subscription_status: [
+        "active",
+        "trialing",
+        "past_due",
+        "canceled",
+        "incomplete",
+      ],
       timeline_item_type: [
         "off_day",
         "flight",

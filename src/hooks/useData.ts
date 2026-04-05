@@ -13,13 +13,36 @@ type ShowInsert = Database["public"]["Tables"]["shows"]["Insert"];
 export function useTours() {
   const { currentOrg } = useOrg();
   const orgId = currentOrg?.organization.id;
+  const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
   return useQuery({
     queryKey: ["tours", orgId],
     queryFn: async () => {
       if (!orgId) return [];
       const { data, error } = await supabase.from("tours").select("*").eq("organization_id", orgId).order("start_date", { ascending: true });
       if (error) throw error;
-      return data as Tour[];
+      return (data as Tour[]).filter((t) => {
+        if (t.status === "completed" || t.status === "archived") return false;
+        if (t.end_date && t.end_date < yesterday) return false;
+        return true;
+      });
+    },
+    enabled: !!orgId,
+  });
+}
+
+export function useArchivedTours() {
+  const { currentOrg } = useOrg();
+  const orgId = currentOrg?.organization.id;
+  const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+  return useQuery({
+    queryKey: ["tours", "archived", orgId],
+    queryFn: async () => {
+      if (!orgId) return [];
+      const { data, error } = await supabase.from("tours").select("*").eq("organization_id", orgId).order("start_date", { ascending: false });
+      if (error) throw error;
+      return (data as Tour[]).filter((t) => {
+        return t.status === "completed" || t.status === "archived" || (t.end_date && t.end_date < yesterday);
+      });
     },
     enabled: !!orgId,
   });

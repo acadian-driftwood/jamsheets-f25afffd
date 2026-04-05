@@ -14,6 +14,7 @@ import ShowDetailPage from "./pages/ShowDetailPage";
 import TravelPage from "./pages/TravelPage";
 import ArchivePage from "./pages/ArchivePage";
 import SettingsPage from "./pages/SettingsPage";
+import MorePage from "./pages/MorePage";
 import BandSettingsPage from "./pages/settings/BandSettingsPage";
 import TeamMembersPage from "./pages/settings/TeamMembersPage";
 import RolesPermissionsPage from "./pages/settings/RolesPermissionsPage";
@@ -85,6 +86,7 @@ function AppRoutes() {
         <Route path="/shows" element={<ShowsPage />} />
         <Route path="/shows/:id" element={<ShowDetailPage />} />
         <Route path="/travel" element={<TravelPage />} />
+        <Route path="/more" element={<MorePage />} />
         <Route path="/archive" element={<ArchivePage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/settings/band" element={<BandSettingsPage />} />

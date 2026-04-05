@@ -5,19 +5,28 @@ import { Input } from "@/components/ui/input";
 import { StatusChip } from "@/components/shared/StatusChip";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { useOrg } from "@/contexts/OrgContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Users, Plus, Trash2, UserPlus } from "lucide-react";
+import { Users, Trash2, Send } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function TeamMembersPage() {
   const { currentOrg } = useOrg();
+  const { user } = useAuth();
   const orgId = currentOrg?.organization.id;
   const isAdmin = currentOrg && ["owner", "admin"].includes(currentOrg.role);
   const qc = useQueryClient();
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("member");
-  const [adding, setAdding] = useState(false);
+  const [sending, setSending] = useState(false);
 
   const { data: members, isLoading } = useQuery({
     queryKey: ["org-members", orgId],
@@ -34,8 +43,47 @@ export default function TeamMembersPage() {
     enabled: !!orgId,
   });
 
-  // Note: full invite flow would require an edge function to send emails.
-  // For now we show the member list and allow removing members.
+  const { data: pendingInvites } = useQuery({
+    queryKey: ["org-invites", orgId],
+    queryFn: async () => {
+      if (!orgId) return [];
+      const { data, error } = await supabase
+        .from("team_invites" as any)
+        .select("*")
+        .eq("organization_id", orgId)
+        .eq("status", "pending")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data as any[];
+    },
+    enabled: !!orgId,
+  });
+
+  const handleInvite = async () => {
+    if (!inviteEmail || !orgId) return;
+    setSending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("team-invites", {
+        body: {
+          action: "send-invite",
+          email: inviteEmail,
+          role: inviteRole,
+          organizationId: orgId,
+          orgName: currentOrg?.organization.name,
+          inviterName: user?.user_metadata?.full_name || user?.email,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) { toast.error(data.error); return; }
+      toast.success(`Invite sent to ${inviteEmail}`);
+      setInviteEmail("");
+      qc.invalidateQueries({ queryKey: ["org-invites"] });
+    } catch (e: any) {
+      toast.error(e.message || "Failed to send invite");
+    } finally {
+      setSending(false);
+    }
+  };
 
   const handleRemove = async (memberId: string, memberName: string) => {
     if (!confirm(`Remove ${memberName} from the team?`)) return;
@@ -53,7 +101,59 @@ export default function TeamMembersPage() {
     <div className="page-container animate-fade-in">
       <PageHeader title="Team Members" back />
 
-      <div className="mt-6">
+      {/* Invite form */}
+      {isAdmin && (
+        <div className="mt-4 mx-4 p-4 rounded-xl border bg-card shadow-sm space-y-3">
+          <p className="text-sm font-medium">Invite a team member</p>
+          <div className="flex gap-2">
+            <Input
+              type="email"
+              placeholder="email@example.com"
+              value={inviteEmail}
+              onChange={e => setInviteEmail(e.target.value)}
+              className="flex-1"
+            />
+            <Select value={inviteRole} onValueChange={setInviteRole}>
+              <SelectTrigger className="w-28">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="tm">TM</SelectItem>
+                <SelectItem value="member">Member</SelectItem>
+                <SelectItem value="crew">Crew</SelectItem>
+                <SelectItem value="readonly">Read-only</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <Button onClick={handleInvite} disabled={!inviteEmail || sending} className="w-full gap-2">
+            <Send className="h-4 w-4" />
+            {sending ? "Sending…" : "Send Invite"}
+          </Button>
+        </div>
+      )}
+
+      {/* Pending invites */}
+      {pendingInvites && pendingInvites.length > 0 && (
+        <div className="mt-4 mx-4">
+          <p className="section-title">Pending Invites</p>
+          <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+            {pendingInvites.map((inv: any) => (
+              <div key={inv.id} className="flex items-center justify-between px-4 py-3 border-b last:border-b-0">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">{inv.email}</p>
+                  <p className="text-xs text-muted-foreground">Invited · {inv.role}</p>
+                </div>
+                <StatusChip label="Pending" variant="warning" />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Current members */}
+      <div className="mt-4">
+        <p className="section-title mx-4">Current Members</p>
         {isLoading ? (
           <div className="space-y-3 px-4">
             {[1, 2, 3].map(i => <div key={i} className="h-16 animate-pulse rounded-xl bg-muted" />)}
@@ -81,12 +181,6 @@ export default function TeamMembersPage() {
             ))}
           </div>
         )}
-
-        <div className="mt-4 px-4">
-          <p className="text-xs text-muted-foreground">
-            To invite new members, share your workspace details and have them sign up. Full email invites coming soon.
-          </p>
-        </div>
       </div>
     </div>
   );

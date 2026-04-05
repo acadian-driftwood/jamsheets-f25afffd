@@ -22,6 +22,8 @@ import ProfilePage from "./pages/settings/ProfilePage";
 import LoginPage from "./pages/LoginPage";
 import OnboardingPage from "./pages/OnboardingPage";
 import NotFound from "./pages/NotFound";
+import JoinPage from "./pages/JoinPage";
+import UnsubscribePage from "./pages/UnsubscribePage";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +57,8 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/join" element={<RequireAuth><JoinPage /></RequireAuth>} />
+      <Route path="/unsubscribe" element={<UnsubscribePage />} />
       <Route path="/" element={<Navigate to="/today" replace />} />
       <Route
         path="/onboarding"

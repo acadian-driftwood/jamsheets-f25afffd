@@ -377,7 +377,6 @@ function GuestListSection({ showId }: { showId: string }) {
   );
 }
 
-}
 
 // ─── Operations Section ──────────────────────────────────
 const OPS_SECTIONS = [

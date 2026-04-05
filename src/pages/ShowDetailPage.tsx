@@ -81,6 +81,22 @@ function Section({ title, icon: Icon, children, defaultOpen = false, count }: { 
   );
 }
 
+// ─── Paid-Only Section (shows UpgradePrompt on Free) ─────
+function PaidSection({ title, icon, children, defaultOpen, count }: { title: string; icon: any; children: React.ReactNode; defaultOpen?: boolean; count?: number }) {
+  const { plan } = useSubscription();
+  const isFree = plan === "free";
+
+  return (
+    <Section title={title} icon={icon} defaultOpen={defaultOpen} count={isFree ? undefined : count}>
+      {isFree ? (
+        <UpgradePrompt feature={title} currentPlan="free" requiredPlan="band" />
+      ) : (
+        children
+      )}
+    </Section>
+  );
+}
+
 // ─── Hotel Section ───────────────────────────────────────
 function HotelSection({ showId }: { showId: string }) {
   const { data: hotel } = useShowHotel(showId);

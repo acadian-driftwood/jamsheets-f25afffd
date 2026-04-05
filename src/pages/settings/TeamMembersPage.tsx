@@ -198,16 +198,27 @@ export default function TeamMembersPage() {
                 <div className="flex items-center gap-2 shrink-0">
                   <StatusChip label="Pending" variant="warning" />
                   {isAdmin && (
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-7 w-7"
-                      disabled={resendingId === inv.id}
-                      onClick={() => handleResend(inv.id, inv.email)}
-                      title="Resend invite"
-                    >
-                      <RefreshCw className={`h-3.5 w-3.5 ${resendingId === inv.id ? "animate-spin" : ""}`} />
-                    </Button>
+                    <>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7"
+                        disabled={resendingId === inv.id}
+                        onClick={() => handleResend(inv.id, inv.email)}
+                        title="Resend invite"
+                      >
+                        <RefreshCw className={`h-3.5 w-3.5 ${resendingId === inv.id ? "animate-spin" : ""}`} />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7 text-destructive"
+                        onClick={() => handleDeleteInvite(inv.id, inv.email)}
+                        title="Delete invite"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </>
                   )}
                 </div>
               </div>

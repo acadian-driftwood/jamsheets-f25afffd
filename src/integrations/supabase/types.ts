@@ -629,48 +629,79 @@ export type Database = {
       }
       tour_timeline_items: {
         Row: {
+          airline: string | null
+          arrival_location: string | null
+          confirmation_number: string | null
           created_at: string
           date: string
+          departure_location: string | null
           id: string
+          linked_item_id: string | null
           notes: string | null
           organization_id: string
+          rental_company: string | null
           subtitle: string | null
           time_end: string | null
           time_start: string | null
           title: string
           tour_id: string
+          travel_subtype: string | null
+          traveler_name: string | null
           type: Database["public"]["Enums"]["timeline_item_type"]
           updated_at: string
         }
         Insert: {
+          airline?: string | null
+          arrival_location?: string | null
+          confirmation_number?: string | null
           created_at?: string
           date: string
+          departure_location?: string | null
           id?: string
+          linked_item_id?: string | null
           notes?: string | null
           organization_id: string
+          rental_company?: string | null
           subtitle?: string | null
           time_end?: string | null
           time_start?: string | null
           title: string
           tour_id: string
+          travel_subtype?: string | null
+          traveler_name?: string | null
           type: Database["public"]["Enums"]["timeline_item_type"]
           updated_at?: string
         }
         Update: {
+          airline?: string | null
+          arrival_location?: string | null
+          confirmation_number?: string | null
           created_at?: string
           date?: string
+          departure_location?: string | null
           id?: string
+          linked_item_id?: string | null
           notes?: string | null
           organization_id?: string
+          rental_company?: string | null
           subtitle?: string | null
           time_end?: string | null
           time_start?: string | null
           title?: string
           tour_id?: string
+          travel_subtype?: string | null
+          traveler_name?: string | null
           type?: Database["public"]["Enums"]["timeline_item_type"]
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "tour_timeline_items_linked_item_id_fkey"
+            columns: ["linked_item_id"]
+            isOneToOne: false
+            referencedRelation: "tour_timeline_items"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "tour_timeline_items_organization_id_fkey"
             columns: ["organization_id"]
@@ -782,6 +813,8 @@ export type Database = {
         | "flight"
         | "rental_pickup"
         | "rental_dropoff"
+        | "driving"
+        | "rental_return"
       tour_status: "draft" | "active" | "completed" | "archived"
     }
     CompositeTypes: {
@@ -917,6 +950,8 @@ export const Constants = {
         "flight",
         "rental_pickup",
         "rental_dropoff",
+        "driving",
+        "rental_return",
       ],
       tour_status: ["draft", "active", "completed", "archived"],
     },

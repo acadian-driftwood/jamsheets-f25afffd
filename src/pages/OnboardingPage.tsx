@@ -20,13 +20,12 @@ export default function OnboardingPage() {
 
     try {
       const slug = bandName.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      const orgId = crypto.randomUUID();
       
       // Create organization
-      const { data: org, error: orgError } = await supabase
+      const { error: orgError } = await supabase
         .from("organizations")
-        .insert({ name: bandName.trim(), slug: slug + "-" + Date.now().toString(36) })
-        .select()
-        .single();
+        .insert({ id: orgId, name: bandName.trim(), slug: slug + "-" + Date.now().toString(36) });
       if (orgError) throw orgError;
 
       // Add creator as owner

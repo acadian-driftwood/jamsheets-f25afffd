@@ -31,10 +31,10 @@ export default function OnboardingPage() {
       // Add creator as owner
       const { error: memberError } = await supabase
         .from("organization_members")
-        .insert({ organization_id: org.id, user_id: user.id, role: "owner" });
+        .insert({ organization_id: orgId, user_id: user.id, role: "owner" });
       if (memberError) throw memberError;
 
-      localStorage.setItem("jamsheets_current_org", org.id);
+      localStorage.setItem("jamsheets_current_org", orgId);
       toast.success(`"${bandName}" workspace created!`);
       navigate("/today");
     } catch (err: any) {

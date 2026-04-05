@@ -25,7 +25,16 @@ export default function JoinPage() {
       const { data, error } = await supabase.functions.invoke("team-invites", {
         body: { action: "accept-invite", token },
       });
-      if (error) throw error;
+      if (error) {
+        // If auth is invalid (deleted user, stale session), sign out and redirect to login
+        if (error.message?.includes("non-2xx") || error.message?.includes("401")) {
+          await supabase.auth.signOut();
+          const redirectPath = `/join?token=${token}`;
+          navigate(`/login?redirect=${encodeURIComponent(redirectPath)}`);
+          return;
+        }
+        throw error;
+      }
       if (data?.error) { setErrorMsg(data.error); setStatus("error"); return; }
       // Refresh org list so RequireOrg sees the new membership
       await refetch();

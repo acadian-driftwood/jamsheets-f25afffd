@@ -33,13 +33,25 @@ export default function TeamMembersPage() {
     queryKey: ["org-members", orgId],
     queryFn: async () => {
       if (!orgId) return [];
-      const { data, error } = await supabase
+      const { data: memberData, error: memberError } = await supabase
         .from("organization_members")
-        .select("*, profile:profiles!organization_members_user_id_fkey(full_name, avatar_url)")
+        .select("*")
         .eq("organization_id", orgId)
         .order("created_at");
-      if (error) throw error;
-      return data;
+      if (memberError) throw memberError;
+      if (!memberData || memberData.length === 0) return [];
+
+      const userIds = memberData.map(m => m.user_id);
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id, full_name, avatar_url")
+        .in("id", userIds);
+
+      const profileMap = new Map((profileData || []).map(p => [p.id, p]));
+      return memberData.map(m => ({
+        ...m,
+        profile: profileMap.get(m.user_id) || { full_name: null, avatar_url: null },
+      }));
     },
     enabled: !!orgId,
   });

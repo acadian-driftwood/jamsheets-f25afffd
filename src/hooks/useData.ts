@@ -62,6 +62,20 @@ export function useCreateTour() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["tours"] }),
   });
 }
+export function useUpdateTour() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: { id: string } & Partial<Tour>) => {
+      const { data, error } = await supabase.from("tours").update(updates).eq("id", id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ["tours"] });
+      qc.invalidateQueries({ queryKey: ["tour", data.id] });
+    },
+  });
+}
 
 // ─── Shows ───────────────────────────────────────────────
 export function useShows(tourId?: string) {

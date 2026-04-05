@@ -185,14 +185,9 @@ export default function TourDetailPage() {
         sticky
         action={
           isPrivileged ? (
-            <div className="flex gap-1">
-              <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setShowEdit(true)}>
-                <Pencil className="h-3.5 w-3.5" />
-              </Button>
-              <Button size="sm" className="gap-1 h-8 rounded-xl text-xs" onClick={() => { setSelectedDate(""); setShowCreate(true); }}>
-                <Plus className="h-3 w-3" /> Add
-              </Button>
-            </div>
+            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setShowEdit(true)}>
+              <Pencil className="h-3.5 w-3.5" />
+            </Button>
           ) : undefined
         }
       />

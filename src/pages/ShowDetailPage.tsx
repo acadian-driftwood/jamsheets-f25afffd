@@ -25,6 +25,8 @@ import { toast } from "sonner";
 import { EditShowModal } from "@/components/modals/EditShowModal";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { useSubscription } from "@/hooks/useSubscription";
+import { UpgradePrompt } from "@/components/shared/UpgradePrompt";
 
 // ─── Readiness Indicator ─────────────────────────────────
 function ReadinessBar({ showId }: { showId: string }) {
@@ -76,6 +78,22 @@ function Section({ title, icon: Icon, children, defaultOpen = false, count }: { 
       </button>
       {open && <div className="pb-4">{children}</div>}
     </section>
+  );
+}
+
+// ─── Paid-Only Section (shows UpgradePrompt on Free) ─────
+function PaidSection({ title, icon, children, defaultOpen, count }: { title: string; icon: any; children: React.ReactNode; defaultOpen?: boolean; count?: number }) {
+  const { plan } = useSubscription();
+  const isFree = plan === "free";
+
+  return (
+    <Section title={title} icon={icon} defaultOpen={defaultOpen} count={isFree ? undefined : count}>
+      {isFree ? (
+        <UpgradePrompt feature={title} currentPlan="free" requiredPlan="band" />
+      ) : (
+        children
+      )}
+    </Section>
   );
 }
 
@@ -548,21 +566,21 @@ export default function ShowDetailPage() {
           <ScheduleSection showId={id!} />
         </Section>
 
-        <Section title="Hotel" icon={Hotel}>
+        <PaidSection title="Hotel" icon={Hotel}>
           <HotelSection showId={id!} />
-        </Section>
+        </PaidSection>
 
-        <Section title="Contacts" icon={Phone} count={contacts?.length}>
+        <PaidSection title="Contacts" icon={Phone} count={contacts?.length}>
           <ContactsSection showId={id!} />
-        </Section>
+        </PaidSection>
 
-        <Section title="Guest List" icon={UserPlus} count={guests?.length}>
+        <PaidSection title="Guest List" icon={UserPlus} count={guests?.length}>
           <GuestListSection showId={id!} />
-        </Section>
+        </PaidSection>
 
-        <Section title="Documents" icon={FileText}>
+        <PaidSection title="Documents" icon={FileText}>
           <DocumentsSection showId={id!} />
-        </Section>
+        </PaidSection>
 
         <Section title="Operations" icon={Car}>
           <OpsSection showId={id!} />

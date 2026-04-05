@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { StatusChip } from "@/components/shared/StatusChip";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { useSubscription } from "@/hooks/useSubscription";
 import { UpgradePrompt } from "@/components/shared/UpgradePrompt";
+import { ShowSwipeNav } from "@/components/tour/ShowSwipeNav";
 
 // ─── Readiness Indicator ─────────────────────────────────
 function ReadinessBar({ showId }: { showId: string }) {
@@ -444,6 +445,15 @@ export default function ShowDetailPage() {
   const [editOpen, setEditOpen] = useState(false);
   const { currentOrg } = useOrg();
   const deleteShow = useDeleteShow();
+  const { data: schedule } = useShowSchedule(id!);
+  const { data: contacts } = useShowContacts(id!);
+  const { data: guests } = useShowGuestList(id!);
+
+  // Swipe navigation state
+  const touchStartX = useRef(0);
+  const touchDelta = useRef(0);
+  const { data: tourShows } = useShows(undefined);
+
   const { data: schedule } = useShowSchedule(id!);
   const { data: contacts } = useShowContacts(id!);
   const { data: guests } = useShowGuestList(id!);

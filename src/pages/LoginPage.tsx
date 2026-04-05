@@ -44,7 +44,8 @@ export default function LoginPage() {
           },
         });
         if (error) throw error;
-        toast.success("Account created! Check your email to confirm.");
+        // Auto-confirm is enabled, so navigate immediately
+        navigate(redirectTo);
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;

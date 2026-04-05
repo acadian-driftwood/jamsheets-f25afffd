@@ -8,27 +8,30 @@ export default function SettingsPage() {
   const { signOut, user } = useAuth();
   const { currentOrg } = useOrg();
   const navigate = useNavigate();
+  const role = currentOrg?.role;
 
   const handleSignOut = async () => {
     await signOut();
     navigate("/login");
   };
 
+  const isOwnerOrAdmin = role === "owner" || role === "admin";
+  const isOwnerAdminOrTm = isOwnerOrAdmin || role === "tm";
+
+  const workspaceItems = [
+    { icon: Music, label: "Band Settings", action: () => navigate("/settings/band"), visible: true },
+    { icon: Users, label: "Team Members", action: () => navigate("/settings/team"), visible: true },
+    { icon: Shield, label: "Roles & Permissions", action: () => navigate("/settings/roles"), visible: isOwnerAdminOrTm },
+    { icon: CreditCard, label: "Billing", action: () => navigate("/settings/billing"), visible: isOwnerOrAdmin },
+  ].filter(item => item.visible);
+
   const settingsSections = [
-    {
-      title: "Workspace",
-      items: [
-        { icon: Music, label: "Band Settings", action: () => navigate("/settings/band") },
-        { icon: Users, label: "Team Members", action: () => navigate("/settings/team") },
-        { icon: Shield, label: "Roles & Permissions", action: () => navigate("/settings/roles") },
-        { icon: CreditCard, label: "Billing", action: () => navigate("/settings/billing") },
-      ],
-    },
+    { title: "Workspace", items: workspaceItems },
     {
       title: "Account",
       items: [
-        { icon: User, label: "Profile", action: () => navigate("/settings/profile") },
-        { icon: LogOut, label: "Sign Out", action: handleSignOut },
+        { icon: User, label: "Profile", action: () => navigate("/settings/profile"), visible: true },
+        { icon: LogOut, label: "Sign Out", action: handleSignOut, visible: true },
       ],
     },
   ];

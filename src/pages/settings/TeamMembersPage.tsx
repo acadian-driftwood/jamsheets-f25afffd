@@ -69,7 +69,7 @@ export default function TeamMembersPage() {
       if (error) throw error;
       return data as any[];
     },
-    enabled: !!orgId,
+    enabled: !!orgId && !!isAdmin,
   });
 
   const handleInvite = async () => {
@@ -184,8 +184,8 @@ export default function TeamMembersPage() {
         </div>
       )}
 
-      {/* Pending invites */}
-      {pendingInvites && pendingInvites.length > 0 && (
+      {/* Pending invites - only visible to admins/owners */}
+      {isAdmin && pendingInvites && pendingInvites.length > 0 && (
         <div className="mt-4 mx-4">
           <p className="section-title">Pending Invites</p>
           <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
@@ -197,29 +197,25 @@ export default function TeamMembersPage() {
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <StatusChip label="Pending" variant="warning" />
-                  {isAdmin && (
-                    <>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-7 w-7"
-                        disabled={resendingId === inv.id}
-                        onClick={() => handleResend(inv.id, inv.email)}
-                        title="Resend invite"
-                      >
-                        <RefreshCw className={`h-3.5 w-3.5 ${resendingId === inv.id ? "animate-spin" : ""}`} />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-7 w-7 text-destructive"
-                        onClick={() => handleDeleteInvite(inv.id, inv.email)}
-                        title="Delete invite"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </>
-                  )}
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-7 w-7"
+                    disabled={resendingId === inv.id}
+                    onClick={() => handleResend(inv.id, inv.email)}
+                    title="Resend invite"
+                  >
+                    <RefreshCw className={`h-3.5 w-3.5 ${resendingId === inv.id ? "animate-spin" : ""}`} />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-7 w-7 text-destructive"
+                    onClick={() => handleDeleteInvite(inv.id, inv.email)}
+                    title="Delete invite"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
                 </div>
               </div>
             ))}

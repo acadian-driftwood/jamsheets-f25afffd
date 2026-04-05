@@ -12,7 +12,7 @@ import { format, isToday, parseISO } from "date-fns";
 
 export default function ShowsPage() {
   const navigate = useNavigate();
-  const { data: shows, isLoading } = useUpcomingShows();
+  const { data: shows, isLoading } = useShows();
   const [showCreate, setShowCreate] = useState(false);
 
   return (

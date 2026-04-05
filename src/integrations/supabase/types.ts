@@ -310,6 +310,51 @@ export type Database = {
           },
         ]
       }
+      show_operations: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          organization_id: string
+          section: string
+          show_id: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          id?: string
+          organization_id: string
+          section: string
+          show_id: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          organization_id?: string
+          section?: string
+          show_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "show_operations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "show_operations_show_id_fkey"
+            columns: ["show_id"]
+            isOneToOne: false
+            referencedRelation: "shows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       show_schedule_items: {
         Row: {
           created_at: string
@@ -370,6 +415,7 @@ export type Database = {
           created_by: string | null
           date: string
           gear_notes: string | null
+          guest_list_max: number | null
           id: string
           notes: string | null
           organization_id: string
@@ -385,6 +431,7 @@ export type Database = {
           created_by?: string | null
           date: string
           gear_notes?: string | null
+          guest_list_max?: number | null
           id?: string
           notes?: string | null
           organization_id: string
@@ -400,6 +447,7 @@ export type Database = {
           created_by?: string | null
           date?: string
           gear_notes?: string | null
+          guest_list_max?: number | null
           id?: string
           notes?: string | null
           organization_id?: string

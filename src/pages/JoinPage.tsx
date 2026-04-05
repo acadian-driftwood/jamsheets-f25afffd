@@ -42,13 +42,14 @@ export default function JoinPage() {
   }
 
   if (!user) {
+    const redirectPath = `/join?token=${token}`;
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
         <div className="w-full max-w-sm text-center space-y-4">
           <h1 className="text-xl font-semibold">Join a Team</h1>
-          <p className="text-sm text-muted-foreground">Sign in or create an account to accept this invite.</p>
-          <Button onClick={() => navigate(`/login?redirect=/join?token=${token}`)} className="w-full">
-            Sign In
+          <p className="text-sm text-muted-foreground">Create an account or sign in to accept this invite.</p>
+          <Button onClick={() => navigate(`/login?redirect=${encodeURIComponent(redirectPath)}`)} className="w-full">
+            Create Account / Sign In
           </Button>
         </div>
       </div>

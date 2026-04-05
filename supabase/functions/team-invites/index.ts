@@ -256,7 +256,10 @@ Deno.serve(async (req) => {
 
       if (memberError) {
         if (memberError.code === '23505') {
-          await supabase.from('team_invites').update({ status: 'accepted' }).eq('id', invite.id)
+          await supabase.from('team_invites').update({ status: 'accepted' })
+            .eq('organization_id', invite.organization_id)
+            .eq('email', user.email!.toLowerCase())
+            .eq('status', 'pending')
           return new Response(JSON.stringify({ success: true, message: 'Already a member' }), {
             status: 200,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -268,7 +271,11 @@ Deno.serve(async (req) => {
         })
       }
 
-      await supabase.from('team_invites').update({ status: 'accepted' }).eq('id', invite.id)
+      // Mark all pending invites for this email+org as accepted
+      await supabase.from('team_invites').update({ status: 'accepted' })
+        .eq('organization_id', invite.organization_id)
+        .eq('email', user.email!.toLowerCase())
+        .eq('status', 'pending')
 
       return new Response(JSON.stringify({ success: true, organizationId: invite.organization_id }), {
         status: 200,

@@ -496,6 +496,9 @@ export default function ShowDetailPage() {
         }
       />
 
+      {/* Tour show navigation */}
+      {show.tour_id && <ShowSwipeNav showId={id!} tourId={show.tour_id} />}
+
       {/* Status + Readiness */}
       <div className="mt-1 space-y-2">
         {today && (

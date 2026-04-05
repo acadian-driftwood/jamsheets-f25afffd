@@ -433,8 +433,20 @@ export default function ShowDetailPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [editOpen, setEditOpen] = useState(false);
+  const { currentOrg } = useOrg();
+  const deleteShow = useDeleteShow();
 
   const { data: show, isLoading } = useShow(id!);
+  const isPrivileged = currentOrg && ["owner", "admin", "tm"].includes(currentOrg.role);
+
+  const handleDeleteShow = async () => {
+    if (!show || !confirm(`Delete "${show.venue}"? This cannot be undone.`)) return;
+    try {
+      await deleteShow.mutateAsync(show.id);
+      toast.success("Show deleted");
+      navigate(-1);
+    } catch { toast.error("Failed to delete show"); }
+  };
 
   if (isLoading) {
     return (

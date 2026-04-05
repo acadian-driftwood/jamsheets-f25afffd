@@ -4,11 +4,12 @@ import { EditTourModal } from "@/components/modals/EditTourModal";
 import { StatusChip } from "@/components/shared/StatusChip";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Button } from "@/components/ui/button";
-import { Plus, Music, Plane, Car, Coffee, MapPin, Pencil, ChevronRight } from "lucide-react";
+import { Plus, Music, Plane, Car, Coffee, MapPin, Pencil, ChevronRight, CalendarOff } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useShows, useTourTimeline } from "@/hooks/useData";
 import { CreateShowModal } from "@/components/modals/CreateShowModal";
 import { CreateTravelModal } from "@/components/modals/CreateTravelModal";
+import { CreateDayOffModal } from "@/components/modals/CreateDayOffModal";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/contexts/OrgContext";
@@ -21,6 +22,7 @@ export default function TourDetailPage() {
   const navigate = useNavigate();
   const [showCreate, setShowCreate] = useState(false);
   const [showTravel, setShowTravel] = useState(false);
+  const [showDayOff, setShowDayOff] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const { currentOrg } = useOrg();
   const qc = useQueryClient();
@@ -124,6 +126,9 @@ export default function TourDetailPage() {
               <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setShowEdit(true)}>
                 <Pencil className="h-3.5 w-3.5" />
               </Button>
+              <Button size="sm" variant="outline" className="gap-1 h-8 rounded-xl text-xs" onClick={() => setShowDayOff(true)}>
+                <Coffee className="h-3 w-3" /> Day Off
+              </Button>
               <Button size="sm" variant="outline" className="gap-1 h-8 rounded-xl text-xs" onClick={() => setShowTravel(true)}>
                 <Plus className="h-3 w-3" /> Travel
               </Button>
@@ -138,7 +143,6 @@ export default function TourDetailPage() {
           )
         }
       />
-
       <section className="mt-4">
         {showsLoading ? (
           <div className="space-y-2">
@@ -237,6 +241,7 @@ export default function TourDetailPage() {
 
       <CreateShowModal open={showCreate} onOpenChange={setShowCreate} defaultTourId={id} />
       {id && <CreateTravelModal open={showTravel} onOpenChange={setShowTravel} tourId={id} />}
+      {id && <CreateDayOffModal open={showDayOff} onOpenChange={setShowDayOff} tourId={id} />}
       {tour && <EditTourModal open={showEdit} onOpenChange={setShowEdit} tour={tour} />}
     </div>
   );

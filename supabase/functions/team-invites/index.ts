@@ -92,7 +92,7 @@ Deno.serve(async (req) => {
       const siteUrl = req.headers.get('origin') || 'https://jammybuffet.com'
       const joinUrl = `${siteUrl}/join?token=${invite.token}`
 
-      await supabase.functions.invoke('send-transactional-email', {
+      const { error: emailError } = await supabase.functions.invoke('send-transactional-email', {
         body: {
           templateName: 'team-invite',
           recipientEmail: email.toLowerCase(),
@@ -105,6 +105,10 @@ Deno.serve(async (req) => {
           },
         },
       })
+
+      if (emailError) {
+        console.error('Failed to send invite email', emailError)
+      }
 
       return new Response(JSON.stringify({ success: true, inviteId: invite.id }), {
         status: 200,

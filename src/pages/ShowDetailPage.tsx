@@ -582,12 +582,12 @@ export default function ShowDetailPage() {
           <DocumentsSection showId={id!} />
         </PaidSection>
 
-        <Section title="Operations" icon={Car}>
+        <PaidSection title="Operations" icon={Car}>
           <OpsSection showId={id!} />
-        </Section>
+        </PaidSection>
 
         {(show.gear_notes || show.notes) && (
-          <Section title="Notes & Gear" icon={Guitar}>
+          <PaidSection title="Notes & Gear" icon={Guitar}>
             <div className="space-y-3">
               {show.gear_notes && (
                 <div>

@@ -41,7 +41,7 @@ function ReadinessBar({ showId }: { showId: string }) {
     { label: "Hotel", ready: !!hotel },
     { label: "Contacts", ready: (contacts?.length || 0) > 0 },
     { label: "Guest List", ready: (guests?.length || 0) > 0 },
-    { label: "Docs", ready: (docs?.length || 0) > 0 },
+    
   ];
 
   return (

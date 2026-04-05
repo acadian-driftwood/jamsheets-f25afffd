@@ -20,22 +20,21 @@ export default function OnboardingPage() {
 
     try {
       const slug = bandName.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      const orgId = crypto.randomUUID();
       
       // Create organization
-      const { data: org, error: orgError } = await supabase
+      const { error: orgError } = await supabase
         .from("organizations")
-        .insert({ name: bandName.trim(), slug: slug + "-" + Date.now().toString(36) })
-        .select()
-        .single();
+        .insert({ id: orgId, name: bandName.trim(), slug: slug + "-" + Date.now().toString(36) });
       if (orgError) throw orgError;
 
       // Add creator as owner
       const { error: memberError } = await supabase
         .from("organization_members")
-        .insert({ organization_id: org.id, user_id: user.id, role: "owner" });
+        .insert({ organization_id: orgId, user_id: user.id, role: "owner" });
       if (memberError) throw memberError;
 
-      localStorage.setItem("jamsheets_current_org", org.id);
+      localStorage.setItem("jamsheets_current_org", orgId);
       toast.success(`"${bandName}" workspace created!`);
       navigate("/today");
     } catch (err: any) {

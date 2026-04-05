@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Music } from "lucide-react";
@@ -11,14 +11,17 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [mode, setMode] = useState<"login" | "signup" | "magic">("login");
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get("redirect") || "/today";
+  const hasInvite = redirectTo.includes("/join");
+  const [mode, setMode] = useState<"login" | "signup" | "magic">(hasInvite ? "signup" : "login");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
 
   // Redirect if already logged in
   if (user) {
-    navigate("/today", { replace: true });
+    navigate(redirectTo, { replace: true });
     return null;
   }
 
@@ -45,7 +48,7 @@ export default function LoginPage() {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        navigate("/today");
+        navigate(redirectTo);
       }
     } catch (err: any) {
       toast.error(err.message || "Authentication failed");

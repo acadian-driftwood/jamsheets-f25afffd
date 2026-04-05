@@ -142,7 +142,7 @@ export default function TourDetailPage() {
             </Button>
           )
         }
-
+      />
       <section className="mt-4">
         {showsLoading ? (
           <div className="space-y-2">

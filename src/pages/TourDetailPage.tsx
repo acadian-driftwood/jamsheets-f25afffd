@@ -141,7 +141,7 @@ export default function TourDetailPage() {
               <Plus className="h-3 w-3" /> Show
             </Button>
           )
-      />
+        }
 
       <section className="mt-4">
         {showsLoading ? (

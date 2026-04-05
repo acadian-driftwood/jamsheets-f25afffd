@@ -11,12 +11,13 @@ interface CreateShowModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   defaultTourId?: string;
+  defaultDate?: string;
 }
 
-export function CreateShowModal({ open, onOpenChange, defaultTourId }: CreateShowModalProps) {
+export function CreateShowModal({ open, onOpenChange, defaultTourId, defaultDate }: CreateShowModalProps) {
   const [venue, setVenue] = useState("");
   const [city, setCity] = useState("");
-  const [date, setDate] = useState("");
+  const [date, setDate] = useState(defaultDate || "");
   const [tourId, setTourId] = useState(defaultTourId || "");
   const [capacity, setCapacity] = useState("");
   const createShow = useCreateShow();

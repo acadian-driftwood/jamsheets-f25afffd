@@ -12,14 +12,15 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   tourId: string;
+  defaultDate?: string;
 }
 
-export function CreateDayOffModal({ open, onOpenChange, tourId }: Props) {
+export function CreateDayOffModal({ open, onOpenChange, tourId, defaultDate }: Props) {
   const { currentOrg } = useOrg();
   const qc = useQueryClient();
   const orgId = currentOrg?.organization.id;
 
-  const [date, setDate] = useState("");
+  const [date, setDate] = useState(defaultDate || "");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
 

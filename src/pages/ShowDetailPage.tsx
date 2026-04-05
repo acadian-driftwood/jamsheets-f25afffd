@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   MapPin, Hotel, Phone, Mail, Edit2, Clock, Plus, Trash2, Check, X,
-  UserPlus, FileText, Upload, Car, Coffee, ShoppingBag, DollarSign, ChevronDown, ChevronUp, Guitar
+  UserPlus, Car, Coffee, ShoppingBag, DollarSign, ChevronDown, ChevronUp, Guitar
 } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import {

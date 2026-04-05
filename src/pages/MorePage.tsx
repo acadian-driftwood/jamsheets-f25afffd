@@ -1,18 +1,26 @@
+import { useState } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrg } from "@/contexts/OrgContext";
-import { ChevronRight, Archive, Settings, User, LogOut, Music } from "lucide-react";
+import { useSubscription, PLAN_LIMITS } from "@/hooks/useSubscription";
+import { OrgSwitcherSheet } from "@/components/modals/OrgSwitcherSheet";
+import { ChevronRight, Archive, Settings, User, LogOut, Music, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function MorePage() {
   const { signOut, user } = useAuth();
-  const { currentOrg } = useOrg();
+  const { currentOrg, organizations } = useOrg();
+  const { plan } = useSubscription();
   const navigate = useNavigate();
+  const [switcherOpen, setSwitcherOpen] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
     navigate("/login");
   };
+
+  const hasMultipleOrgs = organizations.length > 1;
+  const canSwitch = hasMultipleOrgs || plan === "manager";
 
   return (
     <div className="page-container animate-fade-in">
@@ -20,15 +28,21 @@ export default function MorePage() {
 
       <div className="mt-4 space-y-6">
         {currentOrg && (
-          <div className="card-elevated flex items-center gap-3">
+          <button
+            onClick={canSwitch ? () => setSwitcherOpen(true) : undefined}
+            className={`card-elevated flex w-full items-center gap-3 text-left ${canSwitch ? "active:bg-muted/40 cursor-pointer" : "cursor-default"}`}
+          >
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
               <Music className="h-5 w-5 text-primary-foreground" />
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="font-semibold text-sm truncate">{currentOrg.organization.name}</p>
-              <p className="text-xs text-muted-foreground capitalize">{currentOrg.role}</p>
+              <p className="text-xs text-muted-foreground capitalize">
+                {currentOrg.role} · {PLAN_LIMITS[plan].label}
+              </p>
             </div>
-          </div>
+            {canSwitch && <ChevronDown className="h-4 w-4 text-muted-foreground/50 shrink-0" />}
+          </button>
         )}
 
         <div className="rounded-2xl border bg-card shadow-sm overflow-hidden">
@@ -69,6 +83,8 @@ export default function MorePage() {
           {user?.email}
         </p>
       </div>
+
+      <OrgSwitcherSheet open={switcherOpen} onOpenChange={setSwitcherOpen} />
     </div>
   );
 }

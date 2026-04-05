@@ -196,6 +196,8 @@ export default function ShowDetailPage() {
           </div>
         </section>
       )}
+
+      {show && <EditShowModal open={editOpen} onOpenChange={setEditOpen} show={show} />}
     </div>
   );
 }

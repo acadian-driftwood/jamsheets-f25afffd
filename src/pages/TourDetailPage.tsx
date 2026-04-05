@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { InfoCard } from "@/components/shared/InfoCard";
+import { EditTourModal } from "@/components/modals/EditTourModal";
 import { StatusChip } from "@/components/shared/StatusChip";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Button } from "@/components/ui/button";

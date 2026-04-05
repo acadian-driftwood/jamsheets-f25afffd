@@ -367,57 +367,6 @@ export function useDeleteGuest() {
   });
 }
 
-// ─── Show Documents ──────────────────────────────────────
-export function useShowDocuments(showId: string) {
-  return useQuery({
-    queryKey: ["show-documents", showId],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("show_documents").select("*").eq("show_id", showId).order("created_at");
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!showId,
-  });
-}
-
-export function useUploadDocument() {
-  const qc = useQueryClient();
-  const { currentOrg } = useOrg();
-  const { user } = useAuth();
-  return useMutation({
-    mutationFn: async ({ showId, file }: { showId: string; file: File }) => {
-      if (!currentOrg || !user) throw new Error("Not authenticated");
-      const orgId = currentOrg.organization.id;
-      const path = `${orgId}/${showId}/${Date.now()}_${file.name}`;
-      const { error: uploadError } = await supabase.storage.from("show-documents").upload(path, file);
-      if (uploadError) throw uploadError;
-      const { data, error } = await supabase.from("show_documents").insert({
-        show_id: showId,
-        organization_id: orgId,
-        file_name: file.name,
-        file_path: path,
-        file_size: file.size,
-        uploaded_by: user.id,
-      }).select().single();
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: (data) => qc.invalidateQueries({ queryKey: ["show-documents", data.show_id] }),
-  });
-}
-
-export function useDeleteDocument() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ id, showId, filePath }: { id: string; showId: string; filePath: string }) => {
-      await supabase.storage.from("show-documents").remove([filePath]);
-      const { error } = await supabase.from("show_documents").delete().eq("id", id);
-      if (error) throw error;
-      return showId;
-    },
-    onSuccess: (showId) => qc.invalidateQueries({ queryKey: ["show-documents", showId] }),
-  });
-}
 
 // ─── Show Operations ─────────────────────────────────────
 export function useShowOperations(showId: string) {

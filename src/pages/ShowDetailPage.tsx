@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
   MapPin, Hotel, Phone, Mail, Edit2, Clock, Plus, Trash2, Check, X,
-  UserPlus, FileText, Upload, Car, Coffee, ShoppingBag, DollarSign, ChevronDown, ChevronUp, Guitar
+  UserPlus, Car, Coffee, ShoppingBag, DollarSign, ChevronDown, ChevronUp, Guitar
 } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
@@ -15,7 +15,7 @@ import {
   useShowHotel, useUpsertHotel, useDeleteHotel,
   useShowContacts, useCreateContact, useDeleteContact,
   useShowGuestList, useRequestGuest, useUpdateGuestStatus, useDeleteGuest,
-  useShowDocuments, useUploadDocument, useDeleteDocument,
+  
   useShowOperations, useUpsertOperation, useDeleteShow,
 } from "@/hooks/useData";
 import { useAuth } from "@/contexts/AuthContext";
@@ -34,14 +34,14 @@ function ReadinessBar({ showId }: { showId: string }) {
   const { data: hotel } = useShowHotel(showId);
   const { data: contacts } = useShowContacts(showId);
   const { data: guests } = useShowGuestList(showId);
-  const { data: docs } = useShowDocuments(showId);
+  
 
   const items = [
     { label: "Schedule", ready: (schedule?.length || 0) > 0 },
     { label: "Hotel", ready: !!hotel },
     { label: "Contacts", ready: (contacts?.length || 0) > 0 },
     { label: "Guest List", ready: (guests?.length || 0) > 0 },
-    { label: "Docs", ready: (docs?.length || 0) > 0 },
+    
   ];
 
   return (
@@ -377,58 +377,6 @@ function GuestListSection({ showId }: { showId: string }) {
   );
 }
 
-// ─── Documents Section ───────────────────────────────────
-function DocumentsSection({ showId }: { showId: string }) {
-  const { data: docs } = useShowDocuments(showId);
-  const upload = useUploadDocument();
-  const remove = useDeleteDocument();
-  const fileRef = useRef<HTMLInputElement>(null);
-
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      await upload.mutateAsync({ showId, file });
-      toast.success("Uploaded");
-    } catch { toast.error("Upload failed"); }
-    if (fileRef.current) fileRef.current.value = "";
-  };
-
-  const handleDownload = async (filePath: string, fileName: string) => {
-    const { data, error } = await supabase.storage.from("show-documents").download(filePath);
-    if (error) { toast.error("Download failed"); return; }
-    const url = URL.createObjectURL(data);
-    const a = document.createElement("a"); a.href = url; a.download = fileName; a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  return (
-    <div>
-      {docs && docs.length > 0 && (
-        <div className="space-y-2 mb-3">
-          {docs.map(doc => (
-            <div key={doc.id} className="flex items-center justify-between rounded-xl border px-3 py-2.5">
-              <button onClick={() => handleDownload(doc.file_path, doc.file_name)} className="flex items-center gap-2 min-w-0 text-left press-scale">
-                <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-                <div className="min-w-0">
-                  <p className="text-sm font-medium truncate">{doc.file_name}</p>
-                  <p className="text-[11px] text-muted-foreground">{doc.file_size ? `${(doc.file_size / 1024).toFixed(0)} KB` : ""}</p>
-                </div>
-              </button>
-              <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive shrink-0" onClick={() => remove.mutate({ id: doc.id, showId, filePath: doc.file_path })}>
-                <Trash2 className="h-3 w-3" />
-              </Button>
-            </div>
-          ))}
-        </div>
-      )}
-      <input ref={fileRef} type="file" className="hidden" onChange={handleUpload} />
-      <button onClick={() => fileRef.current?.click()} className="text-xs text-accent font-medium hover:underline">
-        {upload.isPending ? "Uploading..." : "+ Upload file"}
-      </button>
-    </div>
-  );
-}
 
 // ─── Operations Section ──────────────────────────────────
 const OPS_SECTIONS = [
@@ -578,9 +526,6 @@ export default function ShowDetailPage() {
           <GuestListSection showId={id!} />
         </PaidSection>
 
-        <PaidSection title="Documents" icon={FileText}>
-          <DocumentsSection showId={id!} />
-        </PaidSection>
 
         <PaidSection title="Operations" icon={Car}>
           <OpsSection showId={id!} />

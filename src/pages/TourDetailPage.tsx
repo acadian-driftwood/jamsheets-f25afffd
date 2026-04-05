@@ -126,6 +126,9 @@ export default function TourDetailPage() {
               <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setShowEdit(true)}>
                 <Pencil className="h-3.5 w-3.5" />
               </Button>
+              <Button size="sm" variant="outline" className="gap-1 h-8 rounded-xl text-xs" onClick={() => setShowDayOff(true)}>
+                <Coffee className="h-3 w-3" /> Day Off
+              </Button>
               <Button size="sm" variant="outline" className="gap-1 h-8 rounded-xl text-xs" onClick={() => setShowTravel(true)}>
                 <Plus className="h-3 w-3" /> Travel
               </Button>
@@ -133,10 +136,6 @@ export default function TourDetailPage() {
                 <Plus className="h-3 w-3" /> Show
               </Button>
             </div>
-          ) : (
-            <Button size="sm" className="gap-1 h-8 rounded-xl text-xs" onClick={() => setShowCreate(true)}>
-              <Plus className="h-3 w-3" /> Show
-            </Button>
           )
         }
       />

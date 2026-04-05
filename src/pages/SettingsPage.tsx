@@ -19,8 +19,8 @@ export default function SettingsPage() {
   const isOwnerAdminOrTm = isOwnerOrAdmin || role === "tm";
 
   const workspaceItems = [
-    { icon: Music, label: "Band Settings", action: () => navigate("/settings/band"), visible: true },
-    { icon: Users, label: "Team Members", action: () => navigate("/settings/team"), visible: true },
+    { icon: Music, label: "Band Settings", action: () => navigate("/settings/band"), visible: role === "owner" },
+    { icon: Users, label: "Team Members", action: () => navigate("/settings/team"), visible: isOwnerOrAdmin },
     { icon: Shield, label: "Roles & Permissions", action: () => navigate("/settings/roles"), visible: isOwnerAdminOrTm },
     { icon: CreditCard, label: "Billing", action: () => navigate("/settings/billing"), visible: isOwnerOrAdmin },
   ].filter(item => item.visible);

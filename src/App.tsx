@@ -57,7 +57,7 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/join" element={<RequireAuth><OrgProvider><JoinPage /></OrgProvider></RequireAuth>} />
+      <Route path="/join" element={<OrgProvider><JoinPage /></OrgProvider>} />
       <Route path="/unsubscribe" element={<UnsubscribePage />} />
       <Route path="/" element={<Navigate to="/today" replace />} />
       <Route

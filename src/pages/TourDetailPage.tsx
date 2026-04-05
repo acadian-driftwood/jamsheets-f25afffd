@@ -4,10 +4,11 @@ import { InfoCard } from "@/components/shared/InfoCard";
 import { StatusChip } from "@/components/shared/StatusChip";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Button } from "@/components/ui/button";
-import { Calendar, Plus, Music, Plane, Car, Coffee, Trash2 } from "lucide-react";
+import { Calendar, Plus, Music, Plane, Car, Coffee, Trash2, MapPin } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useShows, useTourTimeline } from "@/hooks/useData";
 import { CreateShowModal } from "@/components/modals/CreateShowModal";
+import { CreateTravelModal } from "@/components/modals/CreateTravelModal";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/contexts/OrgContext";
@@ -18,6 +19,7 @@ export default function TourDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [showCreate, setShowCreate] = useState(false);
+  const [showTravel, setShowTravel] = useState(false);
   const { currentOrg } = useOrg();
   const qc = useQueryClient();
 
@@ -54,7 +56,7 @@ export default function TourDetailPage() {
   const { data: timelineItems } = useTourTimeline(id!);
 
   const typeIcons: Record<string, typeof Music> = {
-    off_day: Coffee, flight: Plane, rental_pickup: Car, rental_dropoff: Car,
+    off_day: Coffee, flight: Plane, rental_pickup: Car, rental_dropoff: Car, driving: MapPin, rental_return: Car,
   };
 
   type MergedItem = { id: string; type: string; date: string; title: string; subtitle?: string; meta?: string; showId?: string };
@@ -77,6 +79,13 @@ export default function TourDetailPage() {
     return `${start} – ${format(parseISO(tour.end_date + "T00:00:00"), "MMM d, yyyy")}`;
   };
 
+  const chipVariant = (type: string) => {
+    if (type === "show") return "accent";
+    if (type === "flight") return "accent";
+    if (type === "driving") return "warning";
+    return "muted";
+  };
+
   return (
     <div className="page-container animate-fade-in">
       <PageHeader
@@ -85,8 +94,13 @@ export default function TourDetailPage() {
         back
         action={
           <div className="flex gap-1">
+            {isPrivileged && (
+              <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setShowTravel(true)}>
+                <Plus className="h-4 w-4" /> Travel
+              </Button>
+            )}
             <Button size="sm" className="gap-1.5" onClick={() => setShowCreate(true)}>
-              <Plus className="h-4 w-4" /> Add Show
+              <Plus className="h-4 w-4" /> Show
             </Button>
             {isPrivileged && (
               <Button size="icon" variant="ghost" className="text-destructive" onClick={handleDelete}>
@@ -121,7 +135,7 @@ export default function TourDetailPage() {
           <div className="space-y-2">
             {merged.map((item) => {
               const Icon = item.type === "show" ? Music : typeIcons[item.type] || Coffee;
-              const chipLabel = item.type === "show" ? "Show" : item.type.replace("_", " ").replace(/\b\w/g, (c) => c.toUpperCase());
+              const chipLabel = item.type === "show" ? "Show" : item.type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
               return (
                 <InfoCard
                   key={item.id}
@@ -129,7 +143,7 @@ export default function TourDetailPage() {
                   subtitle={item.subtitle}
                   meta={item.meta}
                   onClick={item.showId ? () => navigate(`/shows/${item.showId}`) : undefined}
-                  chip={<StatusChip label={chipLabel} variant={item.type === "show" ? "accent" : "muted"} />}
+                  chip={<StatusChip label={chipLabel} variant={chipVariant(item.type)} />}
                 >
                   <div className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
                     <Calendar className="h-3.5 w-3.5" />
@@ -143,6 +157,7 @@ export default function TourDetailPage() {
       </section>
 
       <CreateShowModal open={showCreate} onOpenChange={setShowCreate} defaultTourId={id} />
+      {id && <CreateTravelModal open={showTravel} onOpenChange={setShowTravel} tourId={id} />}
     </div>
   );
 }

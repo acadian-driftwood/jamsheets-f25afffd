@@ -602,7 +602,7 @@ export default function ShowDetailPage() {
                 </div>
               )}
             </div>
-          </Section>
+          </PaidSection>
         )}
       </div>
 

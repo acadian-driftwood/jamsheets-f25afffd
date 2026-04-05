@@ -16,9 +16,10 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   tourId: string;
+  defaultDate?: string;
 }
 
-export function CreateTravelModal({ open, onOpenChange, tourId }: Props) {
+export function CreateTravelModal({ open, onOpenChange, tourId, defaultDate }: Props) {
   const { currentOrg } = useOrg();
   const qc = useQueryClient();
   const orgId = currentOrg?.organization.id;

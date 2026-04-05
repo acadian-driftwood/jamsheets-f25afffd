@@ -6,6 +6,7 @@ import { useCreateTour } from "@/hooks/useData";
 import { useSubscription, useActiveTourCount } from "@/hooks/useSubscription";
 import { UpgradePrompt } from "@/components/shared/UpgradePrompt";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 interface CreateTourModalProps {
   open: boolean;
@@ -16,26 +17,43 @@ export function CreateTourModal({ open, onOpenChange }: CreateTourModalProps) {
   const [name, setName] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [dateError, setDateError] = useState("");
   const createTour = useCreateTour();
   const { plan, limits } = useSubscription();
   const { data: activeTourCount = 0 } = useActiveTourCount();
   const atLimit = limits.activeTours !== Infinity && activeTourCount >= limits.activeTours;
+  const navigate = useNavigate();
+
+  const validate = () => {
+    if (!startDate || !endDate) {
+      setDateError("Both start and end dates are required");
+      return false;
+    }
+    if (endDate < startDate) {
+      setDateError("End date cannot be before start date");
+      return false;
+    }
+    setDateError("");
+    return true;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim() || !validate()) return;
 
     try {
-      await createTour.mutateAsync({
+      const tour = await createTour.mutateAsync({
         name: name.trim(),
-        start_date: startDate || null,
-        end_date: endDate || null,
+        start_date: startDate,
+        end_date: endDate,
       });
       toast.success("Tour created");
       setName("");
       setStartDate("");
       setEndDate("");
+      setDateError("");
       onOpenChange(false);
+      navigate(`/tours/${tour.id}`);
     } catch (err) {
       toast.error("Failed to create tour");
     }
@@ -59,15 +77,16 @@ export function CreateTourModal({ open, onOpenChange }: CreateTourModalProps) {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="mb-1.5 block text-sm font-medium">Start Date</label>
-                <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="h-11" />
+                <label className="mb-1.5 block text-sm font-medium">Start Date <span className="text-destructive">*</span></label>
+                <Input type="date" value={startDate} onChange={(e) => { setStartDate(e.target.value); setDateError(""); }} className="h-11" />
               </div>
               <div>
-                <label className="mb-1.5 block text-sm font-medium">End Date</label>
-                <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="h-11" />
+                <label className="mb-1.5 block text-sm font-medium">End Date <span className="text-destructive">*</span></label>
+                <Input type="date" value={endDate} onChange={(e) => { setEndDate(e.target.value); setDateError(""); }} className="h-11" />
               </div>
             </div>
-            <Button type="submit" className="h-11 w-full" disabled={createTour.isPending || !name.trim()}>
+            {dateError && <p className="text-xs text-destructive">{dateError}</p>}
+            <Button type="submit" className="h-11 w-full" disabled={createTour.isPending || !name.trim() || !startDate || !endDate}>
               {createTour.isPending ? "Creating..." : "Create Tour"}
             </Button>
           </form>

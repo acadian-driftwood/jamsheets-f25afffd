@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { StatusChip } from "@/components/shared/StatusChip";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -9,11 +10,13 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useShow, useShowSchedule, useShowHotel, useShowContacts, useShowGuestList } from "@/hooks/useData";
 import { useAuth } from "@/contexts/AuthContext";
 import { format, parseISO, isToday } from "date-fns";
+import { EditShowModal } from "@/components/modals/EditShowModal";
 
 export default function ShowDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [editOpen, setEditOpen] = useState(false);
 
   const { data: show, isLoading } = useShow(id!);
   const { data: schedule } = useShowSchedule(id!);
@@ -58,7 +61,7 @@ export default function ShowDetailPage() {
         subtitle={show.city || undefined}
         back
         action={
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" onClick={() => setEditOpen(true)}>
             <Edit2 className="h-4 w-4" />
           </Button>
         }
@@ -193,6 +196,8 @@ export default function ShowDetailPage() {
           </div>
         </section>
       )}
+
+      {show && <EditShowModal open={editOpen} onOpenChange={setEditOpen} show={show} />}
     </div>
   );
 }

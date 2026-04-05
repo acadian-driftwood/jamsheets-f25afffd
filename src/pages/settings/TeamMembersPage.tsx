@@ -238,7 +238,7 @@ export default function TeamMembersPage() {
               <div key={m.id} className="flex items-center justify-between px-4 py-3 border-b last:border-b-0">
                 <div className="min-w-0">
                   <p className="text-sm font-medium truncate">{(m as any).profile?.full_name || "Unknown"}</p>
-                  <p className="text-xs text-muted-foreground">{m.user_id.slice(0, 8)}…</p>
+                  
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <StatusChip label={m.role} variant={roleColors[m.role] || "muted"} />

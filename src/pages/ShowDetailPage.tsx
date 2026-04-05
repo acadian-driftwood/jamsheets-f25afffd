@@ -25,6 +25,8 @@ import { toast } from "sonner";
 import { EditShowModal } from "@/components/modals/EditShowModal";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { useSubscription } from "@/hooks/useSubscription";
+import { UpgradePrompt } from "@/components/shared/UpgradePrompt";
 
 // ─── Readiness Indicator ─────────────────────────────────
 function ReadinessBar({ showId }: { showId: string }) {
@@ -548,21 +550,21 @@ export default function ShowDetailPage() {
           <ScheduleSection showId={id!} />
         </Section>
 
-        <Section title="Hotel" icon={Hotel}>
+        <PaidSection title="Hotel" icon={Hotel}>
           <HotelSection showId={id!} />
-        </Section>
+        </PaidSection>
 
-        <Section title="Contacts" icon={Phone} count={contacts?.length}>
+        <PaidSection title="Contacts" icon={Phone} count={contacts?.length}>
           <ContactsSection showId={id!} />
-        </Section>
+        </PaidSection>
 
-        <Section title="Guest List" icon={UserPlus} count={guests?.length}>
+        <PaidSection title="Guest List" icon={UserPlus} count={guests?.length}>
           <GuestListSection showId={id!} />
-        </Section>
+        </PaidSection>
 
-        <Section title="Documents" icon={FileText}>
+        <PaidSection title="Documents" icon={FileText}>
           <DocumentsSection showId={id!} />
-        </Section>
+        </PaidSection>
 
         <Section title="Operations" icon={Car}>
           <OpsSection showId={id!} />

@@ -6,7 +6,7 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { Button } from "@/components/ui/button";
 import { Music, Plus, Calendar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useUpcomingShows } from "@/hooks/useData";
+import { useShows } from "@/hooks/useData";
 import { CreateShowModal } from "@/components/modals/CreateShowModal";
 import { format, isToday, parseISO } from "date-fns";
 

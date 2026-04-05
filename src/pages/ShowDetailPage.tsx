@@ -16,7 +16,7 @@ import {
   useShowContacts, useCreateContact, useDeleteContact,
   useShowGuestList, useRequestGuest, useUpdateGuestStatus, useDeleteGuest,
   useShowDocuments, useUploadDocument, useDeleteDocument,
-  useShowOperations, useUpsertOperation,
+  useShowOperations, useUpsertOperation, useDeleteShow,
 } from "@/hooks/useData";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrg } from "@/contexts/OrgContext";

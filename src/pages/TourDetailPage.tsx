@@ -241,6 +241,7 @@ export default function TourDetailPage() {
 
       <CreateShowModal open={showCreate} onOpenChange={setShowCreate} defaultTourId={id} />
       {id && <CreateTravelModal open={showTravel} onOpenChange={setShowTravel} tourId={id} />}
+      {id && <CreateDayOffModal open={showDayOff} onOpenChange={setShowDayOff} tourId={id} />}
       {tour && <EditTourModal open={showEdit} onOpenChange={setShowEdit} tour={tour} />}
     </div>
   );

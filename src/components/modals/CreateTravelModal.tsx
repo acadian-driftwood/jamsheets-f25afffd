@@ -33,7 +33,7 @@ export function CreateTravelModal({ open, onOpenChange, tourId, defaultDate }: P
   const [title, setTitle] = useState("");
   const [departureLocation, setDepartureLocation] = useState("");
   const [arrivalLocation, setArrivalLocation] = useState("");
-  const [departureDate, setDepartureDate] = useState("");
+  const [departureDate, setDepartureDate] = useState(defaultDate || "");
   const [departureTime, setDepartureTime] = useState("");
   const [arrivalDate, setArrivalDate] = useState("");
   const [arrivalTime, setArrivalTime] = useState("");

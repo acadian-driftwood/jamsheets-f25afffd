@@ -83,6 +83,11 @@ function AppRoutes() {
         <Route path="/travel" element={<TravelPage />} />
         <Route path="/archive" element={<ArchivePage />} />
         <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/settings/band" element={<BandSettingsPage />} />
+        <Route path="/settings/team" element={<TeamMembersPage />} />
+        <Route path="/settings/roles" element={<RolesPermissionsPage />} />
+        <Route path="/settings/billing" element={<BillingPage />} />
+        <Route path="/settings/profile" element={<ProfilePage />} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>

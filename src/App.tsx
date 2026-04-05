@@ -14,6 +14,11 @@ import ShowDetailPage from "./pages/ShowDetailPage";
 import TravelPage from "./pages/TravelPage";
 import ArchivePage from "./pages/ArchivePage";
 import SettingsPage from "./pages/SettingsPage";
+import BandSettingsPage from "./pages/settings/BandSettingsPage";
+import TeamMembersPage from "./pages/settings/TeamMembersPage";
+import RolesPermissionsPage from "./pages/settings/RolesPermissionsPage";
+import BillingPage from "./pages/settings/BillingPage";
+import ProfilePage from "./pages/settings/ProfilePage";
 import LoginPage from "./pages/LoginPage";
 import OnboardingPage from "./pages/OnboardingPage";
 import NotFound from "./pages/NotFound";
@@ -78,6 +83,11 @@ function AppRoutes() {
         <Route path="/travel" element={<TravelPage />} />
         <Route path="/archive" element={<ArchivePage />} />
         <Route path="/settings" element={<SettingsPage />} />
+        <Route path="/settings/band" element={<BandSettingsPage />} />
+        <Route path="/settings/team" element={<TeamMembersPage />} />
+        <Route path="/settings/roles" element={<RolesPermissionsPage />} />
+        <Route path="/settings/billing" element={<BillingPage />} />
+        <Route path="/settings/profile" element={<ProfilePage />} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>

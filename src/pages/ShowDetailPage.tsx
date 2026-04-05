@@ -16,7 +16,7 @@ import {
   useShowContacts, useCreateContact, useDeleteContact,
   useShowGuestList, useRequestGuest, useUpdateGuestStatus, useDeleteGuest,
   useShowDocuments, useUploadDocument, useDeleteDocument,
-  useShowOperations, useUpsertOperation,
+  useShowOperations, useUpsertOperation, useDeleteShow,
 } from "@/hooks/useData";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrg } from "@/contexts/OrgContext";
@@ -433,8 +433,20 @@ export default function ShowDetailPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [editOpen, setEditOpen] = useState(false);
+  const { currentOrg } = useOrg();
+  const deleteShow = useDeleteShow();
 
   const { data: show, isLoading } = useShow(id!);
+  const isPrivileged = currentOrg && ["owner", "admin", "tm"].includes(currentOrg.role);
+
+  const handleDeleteShow = async () => {
+    if (!show || !confirm(`Delete "${show.venue}"? This cannot be undone.`)) return;
+    try {
+      await deleteShow.mutateAsync(show.id);
+      toast.success("Show deleted");
+      navigate(-1);
+    } catch { toast.error("Failed to delete show"); }
+  };
 
   if (isLoading) {
     return (
@@ -461,9 +473,16 @@ export default function ShowDetailPage() {
         subtitle={show.city || undefined}
         back
         action={
-          <Button variant="ghost" size="icon" onClick={() => setEditOpen(true)}>
-            <Edit2 className="h-4 w-4" />
-          </Button>
+          <div className="flex gap-1">
+            <Button variant="ghost" size="icon" onClick={() => setEditOpen(true)}>
+              <Edit2 className="h-4 w-4" />
+            </Button>
+            {isPrivileged && (
+              <Button variant="ghost" size="icon" className="text-destructive" onClick={handleDeleteShow}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         }
       />
 

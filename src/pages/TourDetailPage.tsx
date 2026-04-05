@@ -4,18 +4,24 @@ import { InfoCard } from "@/components/shared/InfoCard";
 import { StatusChip } from "@/components/shared/StatusChip";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Button } from "@/components/ui/button";
-import { Calendar, Plus, Music, Plane, Car, Coffee } from "lucide-react";
+import { Calendar, Plus, Music, Plane, Car, Coffee, Trash2 } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useShows, useTourTimeline } from "@/hooks/useData";
 import { CreateShowModal } from "@/components/modals/CreateShowModal";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useOrg } from "@/contexts/OrgContext";
 import { format, parseISO } from "date-fns";
+import { toast } from "sonner";
 
 export default function TourDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [showCreate, setShowCreate] = useState(false);
+  const { currentOrg } = useOrg();
+  const qc = useQueryClient();
+
+  const isPrivileged = currentOrg && ["owner", "admin", "tm"].includes(currentOrg.role);
 
   const { data: tour } = useQuery({
     queryKey: ["tour", id],
@@ -27,40 +33,39 @@ export default function TourDetailPage() {
     enabled: !!id,
   });
 
+  const deleteTour = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("tours").delete().eq("id", id!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["tours"] });
+      toast.success("Tour deleted");
+      navigate("/tours");
+    },
+  });
+
+  const handleDelete = () => {
+    if (!tour || !confirm(`Delete "${tour.name}" and all its shows? This cannot be undone.`)) return;
+    deleteTour.mutate();
+  };
+
   const { data: shows, isLoading: showsLoading } = useShows(id);
   const { data: timelineItems } = useTourTimeline(id!);
 
   const typeIcons: Record<string, typeof Music> = {
-    off_day: Coffee,
-    flight: Plane,
-    rental_pickup: Car,
-    rental_dropoff: Car,
+    off_day: Coffee, flight: Plane, rental_pickup: Car, rental_dropoff: Car,
   };
 
-  // Merge shows and timeline items into one chronological list
   type MergedItem = { id: string; type: string; date: string; title: string; subtitle?: string; meta?: string; showId?: string };
   const merged: MergedItem[] = [];
 
   shows?.forEach((s) => {
-    merged.push({
-      id: s.id,
-      type: "show",
-      date: s.date,
-      title: s.venue,
-      subtitle: s.city || undefined,
-      showId: s.id,
-    });
+    merged.push({ id: s.id, type: "show", date: s.date, title: s.venue, subtitle: s.city || undefined, showId: s.id });
   });
 
   timelineItems?.forEach((t) => {
-    merged.push({
-      id: t.id,
-      type: t.type,
-      date: t.date,
-      title: t.title,
-      subtitle: t.subtitle || undefined,
-      meta: t.time_start || undefined,
-    });
+    merged.push({ id: t.id, type: t.type, date: t.date, title: t.title, subtitle: t.subtitle || undefined, meta: t.time_start || undefined });
   });
 
   merged.sort((a, b) => a.date.localeCompare(b.date));
@@ -79,9 +84,16 @@ export default function TourDetailPage() {
         subtitle={formatDates()}
         back
         action={
-          <Button size="sm" className="gap-1.5" onClick={() => setShowCreate(true)}>
-            <Plus className="h-4 w-4" /> Add Show
-          </Button>
+          <div className="flex gap-1">
+            <Button size="sm" className="gap-1.5" onClick={() => setShowCreate(true)}>
+              <Plus className="h-4 w-4" /> Add Show
+            </Button>
+            {isPrivileged && (
+              <Button size="icon" variant="ghost" className="text-destructive" onClick={handleDelete}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         }
       />
 
@@ -103,11 +115,7 @@ export default function TourDetailPage() {
             icon={Music}
             title="Empty timeline"
             description="Add shows and travel to build your tour timeline."
-            action={
-              <Button size="sm" onClick={() => setShowCreate(true)}>
-                <Plus className="mr-1.5 h-4 w-4" /> Add Show
-              </Button>
-            }
+            action={<Button size="sm" onClick={() => setShowCreate(true)}><Plus className="mr-1.5 h-4 w-4" /> Add Show</Button>}
           />
         ) : (
           <div className="space-y-2">

@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { Calendar, Map, Music, Plane, Archive, Settings } from "lucide-react";
+import { Calendar, Map, Music, Plane, MoreHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const tabs = [
@@ -7,15 +7,21 @@ const tabs = [
   { path: "/tours", label: "Tours", icon: Map },
   { path: "/shows", label: "Shows", icon: Music },
   { path: "/travel", label: "Travel", icon: Plane },
-  { path: "/archive", label: "Archive", icon: Archive },
-  { path: "/settings", label: "Settings", icon: Settings },
+  { path: "/more", label: "More", icon: MoreHorizontal },
 ] as const;
 
 export function BottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const isActive = (path: string) => location.pathname.startsWith(path);
+  const isActive = (path: string) => {
+    if (path === "/more") {
+      return ["/more", "/archive", "/settings"].some((p) =>
+        location.pathname.startsWith(p)
+      );
+    }
+    return location.pathname.startsWith(path);
+  };
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80">
@@ -27,12 +33,15 @@ export function BottomNav() {
               key={path}
               onClick={() => navigate(path)}
               className={cn(
-                "flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition-colors",
-                active ? "text-accent" : "text-muted-foreground"
+                "flex flex-1 flex-col items-center gap-1 py-2.5 text-[10px] font-medium transition-colors",
+                active ? "text-foreground" : "text-muted-foreground"
               )}
             >
               <Icon className={cn("h-5 w-5", active && "stroke-[2.5]")} />
               <span>{label}</span>
+              {active && (
+                <span className="h-1 w-1 rounded-full bg-accent" />
+              )}
             </button>
           );
         })}

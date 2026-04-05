@@ -1,14 +1,13 @@
 import { PageHeader } from "@/components/layout/PageHeader";
 import { InfoCard } from "@/components/shared/InfoCard";
 import { StatusChip } from "@/components/shared/StatusChip";
-import { EmptyState } from "@/components/shared/EmptyState";
-import { Calendar, Clock, Music, Hotel, Plane, Car, MapPin } from "lucide-react";
+import { Clock, Music, Plane, Car, MapPin, Coffee } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useUpcomingShows } from "@/hooks/useData";
 import { useOrg } from "@/contexts/OrgContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { format, isToday, parseISO } from "date-fns";
+import { format, isToday, parseISO, differenceInCalendarDays } from "date-fns";
 
 const travelTypeLabel: Record<string, string> = {
   flight: "Flight", driving: "Drive", rental_pickup: "Pickup", rental_dropoff: "Dropoff", rental_return: "Return",
@@ -39,70 +38,88 @@ export default function TodayPage() {
   });
 
   const todayShows = shows?.filter((s) => isToday(parseISO(s.date + "T00:00:00"))) || [];
-  const nextShow = shows?.[0];
+  const nextShow = shows?.find((s) => !isToday(parseISO(s.date + "T00:00:00")));
+  const upcomingCount = shows?.length || 0;
+
+  const daysUntilNext = nextShow
+    ? differenceInCalendarDays(parseISO(nextShow.date + "T00:00:00"), new Date())
+    : null;
 
   return (
     <div className="page-container animate-fade-in">
       <PageHeader
         title="Today"
         subtitle={format(new Date(), "EEEE, MMMM d")}
+        size="hero"
       />
 
       {isLoading ? (
         <div className="mt-6 space-y-3">
           {[1, 2].map((i) => (
-            <div key={i} className="h-24 animate-pulse rounded-xl bg-muted" />
+            <div key={i} className="h-24 animate-pulse rounded-2xl bg-muted" />
           ))}
         </div>
       ) : (
-        <>
-          {/* Today's Show(s) */}
-          {todayShows.length > 0 ? (
-            <section className="mt-6">
-              <p className="section-title">Tonight</p>
-              {todayShows.map((show) => (
-                <InfoCard
-                  key={show.id}
-                  title={show.venue}
-                  subtitle={show.city || undefined}
-                  onClick={() => navigate(`/shows/${show.id}`)}
-                  chip={<StatusChip label="Show Day" variant="accent" />}
-                >
-                  <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+        <div className="mt-4 space-y-6">
+          {/* Tonight */}
+          <section>
+            <p className="section-title">
+              {todayShows.length > 0 ? "Tonight" : "Today"}
+            </p>
+            {todayShows.length > 0 ? (
+              <div className="space-y-2">
+                {todayShows.map((show) => (
+                  <InfoCard
+                    key={show.id}
+                    icon={Music}
+                    title={show.venue}
+                    subtitle={show.city || undefined}
+                    onClick={() => navigate(`/shows/${show.id}`)}
+                    chip={<StatusChip label="Show Day" variant="accent" />}
+                    accentLeft
+                  >
                     {show.capacity && (
-                      <span>{show.capacity.toLocaleString()} cap</span>
+                      <p className="mt-1.5 text-[11px] text-muted-foreground">
+                        {show.capacity.toLocaleString()} cap
+                      </p>
                     )}
-                  </div>
-                </InfoCard>
-              ))}
-            </section>
-          ) : (
-            <section className="mt-6">
-              <p className="section-title">Tonight</p>
-              <div className="card-elevated text-center py-8">
-                <p className="text-sm text-muted-foreground">No show today</p>
+                  </InfoCard>
+                ))}
               </div>
-            </section>
-          )}
+            ) : (
+              <div className="rounded-2xl border bg-card p-6 text-center">
+                <Coffee className="h-5 w-5 mx-auto text-muted-foreground/50 mb-2" />
+                <p className="text-sm text-muted-foreground">Day off</p>
+              </div>
+            )}
+          </section>
 
-          {/* Today's Travel */}
+          {/* Travel Today */}
           {todayTravel && todayTravel.length > 0 && (
-            <section className="mt-6">
-              <p className="section-title">Travel Today</p>
+            <section>
+              <p className="section-title">On the Road</p>
               <div className="space-y-2">
                 {todayTravel.map((item) => {
                   const Icon = item.type === "flight" ? Plane : item.type === "driving" ? MapPin : Car;
                   return (
                     <InfoCard
                       key={item.id}
+                      icon={Icon}
                       title={item.title}
                       subtitle={item.subtitle || undefined}
-                      chip={<StatusChip label={travelTypeLabel[item.type] || item.type} variant={item.type === "flight" ? "accent" : "muted"} />}
+                      chip={
+                        <StatusChip
+                          label={travelTypeLabel[item.type] || item.type}
+                          variant={item.type === "flight" ? "accent" : "muted"}
+                        />
+                      }
                     >
-                      <div className="mt-1.5 flex items-center gap-2 text-xs text-muted-foreground">
-                        {item.time_start && <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{item.time_start}</span>}
-                        {(item as any).traveler_name && <span>{(item as any).traveler_name}</span>}
-                      </div>
+                      {item.time_start && (
+                        <p className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground">
+                          <Clock className="h-3 w-3" />
+                          {item.time_start}
+                        </p>
+                      )}
                     </InfoCard>
                   );
                 })}
@@ -111,33 +128,44 @@ export default function TodayPage() {
           )}
 
           {/* Next Up */}
-          {nextShow && !isToday(parseISO(nextShow.date + "T00:00:00")) && (
-            <section className="mt-6">
+          {nextShow && (
+            <section>
               <p className="section-title">Next Up</p>
               <InfoCard
+                icon={Music}
                 title={nextShow.venue}
                 subtitle={nextShow.city || undefined}
                 meta={format(parseISO(nextShow.date + "T00:00:00"), "EEEE, MMM d")}
                 onClick={() => navigate(`/shows/${nextShow.id}`)}
+                chip={
+                  daysUntilNext !== null ? (
+                    <StatusChip
+                      label={daysUntilNext === 1 ? "Tomorrow" : `In ${daysUntilNext} days`}
+                      variant="muted"
+                    />
+                  ) : undefined
+                }
               />
             </section>
           )}
 
-          {/* Quick Stats */}
-          <section className="mt-6">
+          {/* Overview */}
+          <section>
             <p className="section-title">Overview</p>
             <div className="grid grid-cols-2 gap-3">
               <div className="card-elevated">
-                <p className="text-2xl font-bold">{shows?.length || 0}</p>
-                <p className="text-xs text-muted-foreground">Upcoming shows</p>
+                <p className="text-2xl font-bold tabular-nums">{upcomingCount}</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Upcoming shows</p>
               </div>
               <div className="card-elevated">
-                <p className="text-2xl font-bold">{currentOrg?.organization.name || "—"}</p>
-                <p className="text-xs text-muted-foreground">Current workspace</p>
+                <p className="text-2xl font-bold tabular-nums">
+                  {todayTravel?.length || 0}
+                </p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Travel today</p>
               </div>
             </div>
           </section>
-        </>
+        </div>
       )}
     </div>
   );

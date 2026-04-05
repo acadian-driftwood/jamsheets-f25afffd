@@ -27,58 +27,56 @@ export default function ArchivePage() {
 
   return (
     <div className="page-container animate-fade-in">
-      <PageHeader title="Archive" subtitle="Past tours & shows" />
+      <PageHeader title="Archive" subtitle="Past tours & shows" back />
 
       {isLoading ? (
         <div className="mt-6 space-y-3">
           {[1, 2].map((i) => (
-            <div key={i} className="h-20 animate-pulse rounded-xl bg-muted" />
+            <div key={i} className="h-16 animate-pulse rounded-2xl bg-muted" />
           ))}
         </div>
       ) : isEmpty ? (
         <EmptyState
           icon={Archive}
-          title="Nothing archived yet"
+          title="Nothing here yet"
           description="Tours and shows move here automatically after they end."
         />
       ) : (
-        <div className="mt-6 space-y-6">
+        <div className="mt-5 space-y-6">
           {hasTours && (
-            <div className="space-y-3">
-              <h2 className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
-                <Map className="h-4 w-4" /> Tours
-              </h2>
-              {tours.map((tour) => (
-                <InfoCard
-                  key={tour.id}
-                  title={tour.name}
-                  subtitle={formatTourDates(tour)}
-                  onClick={() => navigate(`/tours/${tour.id}`)}
-                  chip={<StatusChip label="Archived" variant="muted" />}
-                />
-              ))}
-            </div>
+            <section>
+              <p className="section-header mb-2.5 flex items-center gap-1.5">
+                <Map className="h-3.5 w-3.5" /> Tours
+              </p>
+              <div className="space-y-2">
+                {tours.map((tour) => (
+                  <InfoCard
+                    key={tour.id}
+                    title={tour.name}
+                    subtitle={formatTourDates(tour)}
+                    onClick={() => navigate(`/tours/${tour.id}`)}
+                  />
+                ))}
+              </div>
+            </section>
           )}
 
           {hasShows && (
-            <div className="space-y-3">
-              <h2 className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
-                <Calendar className="h-4 w-4" /> Shows
-              </h2>
-              {shows.map((show) => (
-                <InfoCard
-                  key={show.id}
-                  title={show.venue}
-                  subtitle={show.city || undefined}
-                  chip={<StatusChip label="Archived" variant="muted" />}
-                >
-                  <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Calendar className="h-3.5 w-3.5" />
-                    <span>{format(parseISO(show.date + "T00:00:00"), "MMM d, yyyy")}</span>
-                  </div>
-                </InfoCard>
-              ))}
-            </div>
+            <section>
+              <p className="section-header mb-2.5 flex items-center gap-1.5">
+                <Calendar className="h-3.5 w-3.5" /> Shows
+              </p>
+              <div className="space-y-2">
+                {shows.map((show) => (
+                  <InfoCard
+                    key={show.id}
+                    title={show.venue}
+                    subtitle={show.city || undefined}
+                    meta={format(parseISO(show.date + "T00:00:00"), "MMM d, yyyy")}
+                  />
+                ))}
+              </div>
+            </section>
           )}
         </div>
       )}

@@ -445,18 +445,11 @@ export default function ShowDetailPage() {
   const [editOpen, setEditOpen] = useState(false);
   const { currentOrg } = useOrg();
   const deleteShow = useDeleteShow();
-  const { data: schedule } = useShowSchedule(id!);
-  const { data: contacts } = useShowContacts(id!);
-  const { data: guests } = useShowGuestList(id!);
-
   // Swipe navigation state
   const touchStartX = useRef(0);
   const touchDelta = useRef(0);
-  const { data: tourShows } = useShows(undefined);
 
-  const { data: schedule } = useShowSchedule(id!);
-  const { data: contacts } = useShowContacts(id!);
-  const { data: guests } = useShowGuestList(id!);
+  const { data: show, isLoading } = useShow(id!);
 
   const { data: show, isLoading } = useShow(id!);
   const isPrivileged = currentOrg && ["owner", "admin", "tm"].includes(currentOrg.role);

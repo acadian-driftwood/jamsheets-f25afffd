@@ -1,35 +1,36 @@
 
 
-# Fix: Invite Link Blank Page on First Click
+# Updated Import Plan: Add Tour Timeline Items
 
-## Root Cause
+All previous mappings (tours, shows, hotels, contacts, schedule, guest list, operations) remain unchanged. Adding the `tour_timeline_items` table.
 
-The `/join` route wraps `JoinPage` in `<OrgProvider>`. `OrgProvider` calls `useAuth()` which depends on `AuthContext` resolving the session. On a cold first load (clicking the email link), there's a race condition: the Supabase client's `onAuthStateChange` fires `INITIAL_SESSION` before `getSession` fully resolves from storage. During this window, the page can render blank or flash before settling.
+## Timeline Items Mapping (old → new)
 
-Additionally, `OrgProvider` is unnecessary for unauthenticated users on the join page -- it only provides `refetch` which is called after join succeeds.
+| Old Column | New Column | Notes |
+|---|---|---|
+| `id` | `id` | Keep as-is |
+| `tour_id` | `tour_id` | Map old `83e29cc2...` → new Jammy Buffet tour ID |
+| `item_type` | `type` | `off_day` → `off_day`, `flight_departure` → `flight` |
+| `title` | `title` | Keep as-is |
+| `starts_at` | `date` + `time_start` | Extract date portion → `date`, time portion → `time_start` (HH:MM) |
+| `ends_at` | `time_end` | Extract time portion if not null |
+| `location` | `departure_location` | For flights; null for off_days |
+| `details` | `notes` | Keep as-is |
+| `traveler_name` | `traveler_name` | Keep as-is |
+| `airline` | `airline` | Keep as-is |
+| `confirmation_number` | `confirmation_number` | Keep as-is |
+| `sort_order` | *(dropped)* | Not in new schema |
+| *(new)* | `organization_id` | Set to Jammy Buffet org ID |
+| *(new)* | `updated_at` | Set to `now()` |
 
-## Fix
+## Data (6 rows)
 
-**`src/App.tsx`**: Remove `OrgProvider` wrapper from the `/join` route entirely. JoinPage doesn't need org context until after the user has joined.
+- 2 flight items (`flight_departure` → `flight`)
+- 4 off_day items (type stays `off_day`)
 
-```
-<Route path="/join" element={<JoinPage />} />
-```
+## Implementation
 
-**`src/pages/JoinPage.tsx`**:
-- Remove `useOrg()` dependency. Instead of calling `refetch()` after join, just navigate to `/today` -- the main app shell already wraps routes in `OrgProvider` which will fetch orgs on mount.
-- Store the org ID in localStorage (already done) so `OrgProvider` picks it up when `/today` loads.
-- Remove the `import { useOrg }` line.
+The Python import script (already planned) will include a section for `tour_timeline_items` inserted after tours but before shows (no dependency on shows). The script parses the SQL values, applies the column mapping above, and inserts via `psql`.
 
-This eliminates the blank page because:
-1. No `OrgProvider` means no cascading context dependencies for unauthenticated users
-2. The page renders the signup form immediately after `AuthContext.loading` resolves
-3. After signup + join, navigation to `/today` triggers the normal authenticated app shell
-
-## Files
-
-| File | Change |
-|------|--------|
-| `src/App.tsx` | Remove `OrgProvider` from `/join` route |
-| `src/pages/JoinPage.tsx` | Remove `useOrg()`, navigate directly after join |
+No schema changes needed — the `tour_timeline_items` table already supports all mapped columns.
 

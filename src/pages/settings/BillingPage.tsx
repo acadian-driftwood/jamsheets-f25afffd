@@ -26,7 +26,7 @@ const PLANS: { tier: PlanTier; features: string[]; recommended?: boolean }[] = [
       "Up to 10 team members",
       "Unlimited tours & shows",
       "Full schedule, hotel, contacts, guest list",
-      "Documents & gear notes",
+      "Gear notes & operations",
       "Team roles & permissions",
     ],
   },

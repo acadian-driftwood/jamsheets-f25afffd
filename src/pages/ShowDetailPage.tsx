@@ -450,8 +450,9 @@ export default function ShowDetailPage() {
   const touchDelta = useRef(0);
 
   const { data: show, isLoading } = useShow(id!);
-
-  const { data: show, isLoading } = useShow(id!);
+  const { data: schedule } = useShowSchedule(id!);
+  const { data: contacts } = useShowContacts(id!);
+  const { data: guests } = useShowGuestList(id!);
   const isPrivileged = currentOrg && ["owner", "admin", "tm"].includes(currentOrg.role);
 
   const handleDeleteShow = async () => {

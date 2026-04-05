@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatusChip } from "@/components/shared/StatusChip";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { UpgradePrompt } from "@/components/shared/UpgradePrompt";
 import { useOrg } from "@/contexts/OrgContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription, useOrgMemberCount } from "@/hooks/useSubscription";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -28,6 +30,9 @@ export default function TeamMembersPage() {
   const [inviteRole, setInviteRole] = useState("member");
   const [sending, setSending] = useState(false);
   const [resendingId, setResendingId] = useState<string | null>(null);
+  const { plan, limits } = useSubscription();
+  const { data: memberCount = 0 } = useOrgMemberCount();
+  const atMemberLimit = memberCount >= limits.members;
 
   const { data: members, isLoading } = useQuery({
     queryKey: ["org-members", orgId],
@@ -154,33 +159,45 @@ export default function TeamMembersPage() {
 
       {/* Invite form */}
       {isAdmin && (
-        <div className="mt-4 mx-4 p-4 rounded-xl border bg-card shadow-sm space-y-3">
-          <p className="text-sm font-medium">Invite a team member</p>
-          <div className="flex gap-2">
-            <Input
-              type="email"
-              placeholder="email@example.com"
-              value={inviteEmail}
-              onChange={e => setInviteEmail(e.target.value)}
-              className="flex-1"
+        <div className="mt-4 mx-4">
+          {atMemberLimit ? (
+            <UpgradePrompt
+              feature={`Adding more than ${limits.members} team members`}
+              currentPlan={plan}
             />
-            <Select value={inviteRole} onValueChange={setInviteRole}>
-              <SelectTrigger className="w-28">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="tm">TM</SelectItem>
-                <SelectItem value="member">Member</SelectItem>
-                <SelectItem value="crew">Crew</SelectItem>
-                <SelectItem value="readonly">Read-only</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <Button onClick={handleInvite} disabled={!inviteEmail || sending} className="w-full gap-2">
-            <Send className="h-4 w-4" />
-            {sending ? "Sending…" : "Send Invite"}
-          </Button>
+          ) : (
+            <div className="p-4 rounded-xl border bg-card shadow-sm space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium">Invite a team member</p>
+                <span className="text-[10px] text-muted-foreground">{memberCount}/{limits.members} members</span>
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  type="email"
+                  placeholder="email@example.com"
+                  value={inviteEmail}
+                  onChange={e => setInviteEmail(e.target.value)}
+                  className="flex-1"
+                />
+                <Select value={inviteRole} onValueChange={setInviteRole}>
+                  <SelectTrigger className="w-28">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="tm">TM</SelectItem>
+                    <SelectItem value="member">Member</SelectItem>
+                    <SelectItem value="crew">Crew</SelectItem>
+                    <SelectItem value="readonly">Read-only</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button onClick={handleInvite} disabled={!inviteEmail || sending} className="w-full gap-2">
+                <Send className="h-4 w-4" />
+                {sending ? "Sending…" : "Send Invite"}
+              </Button>
+            </div>
+          )}
         </div>
       )}
 

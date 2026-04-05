@@ -116,6 +116,72 @@ Deno.serve(async (req) => {
       })
     }
 
+    if (action === 'resend-invite') {
+      const { inviteId, organizationId, orgName, inviterName } = body
+
+      if (!inviteId || !organizationId) {
+        return new Response(JSON.stringify({ error: 'inviteId and organizationId required' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      // Verify caller is admin/owner
+      const { data: hasResendRole } = await supabase.rpc('has_org_role', {
+        _user_id: user.id,
+        _org_id: organizationId,
+        _roles: ['owner', 'admin'],
+      })
+      if (!hasResendRole) {
+        return new Response(JSON.stringify({ error: 'Insufficient permissions' }), {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      // Fetch the invite
+      const { data: invite, error: fetchError } = await supabase
+        .from('team_invites')
+        .select('*')
+        .eq('id', inviteId)
+        .eq('organization_id', organizationId)
+        .eq('status', 'pending')
+        .maybeSingle()
+
+      if (fetchError || !invite) {
+        return new Response(JSON.stringify({ error: 'Invite not found or already accepted' }), {
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      const siteUrl = req.headers.get('origin') || 'https://jammybuffet.com'
+      const joinUrl = `${siteUrl}/join?token=${invite.token}`
+
+      const { error: resendEmailError } = await supabase.functions.invoke('send-transactional-email', {
+        body: {
+          templateName: 'team-invite',
+          recipientEmail: invite.email,
+          idempotencyKey: `team-invite-resend-${invite.id}-${Date.now()}`,
+          templateData: {
+            orgName: orgName || 'a team',
+            inviterName: inviterName || 'A team admin',
+            role: invite.role || 'member',
+            joinUrl,
+          },
+        },
+      })
+
+      if (resendEmailError) {
+        console.error('Failed to resend invite email', resendEmailError)
+      }
+
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
     if (action === 'accept-invite') {
       const { token: inviteToken } = body
       if (!inviteToken) {

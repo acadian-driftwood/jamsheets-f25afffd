@@ -9,7 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Users, Trash2, Send } from "lucide-react";
+import { Users, Trash2, Send, RefreshCw } from "lucide-react";
 import {
   Select,
   SelectContent,

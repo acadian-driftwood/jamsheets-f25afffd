@@ -136,8 +136,11 @@ export default function TourDetailPage() {
                 <Plus className="h-3 w-3" /> Show
               </Button>
             </div>
+          ) : (
+            <Button size="sm" className="gap-1 h-8 rounded-xl text-xs" onClick={() => setShowCreate(true)}>
+              <Plus className="h-3 w-3" /> Show
+            </Button>
           )
-        }
       />
 
       <section className="mt-4">

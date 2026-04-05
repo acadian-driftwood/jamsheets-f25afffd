@@ -816,6 +816,7 @@ export type Database = {
     Functions: {
       check_active_tour_limit: { Args: { _org_id: string }; Returns: boolean }
       check_member_limit: { Args: { _org_id: string }; Returns: boolean }
+      check_workspace_limit: { Args: { _user_id: string }; Returns: boolean }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean

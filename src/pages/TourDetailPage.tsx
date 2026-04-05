@@ -9,6 +9,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useShows, useTourTimeline } from "@/hooks/useData";
 import { CreateShowModal } from "@/components/modals/CreateShowModal";
 import { CreateTravelModal } from "@/components/modals/CreateTravelModal";
+import { CreateDayOffModal } from "@/components/modals/CreateDayOffModal";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/contexts/OrgContext";
@@ -21,6 +22,7 @@ export default function TourDetailPage() {
   const navigate = useNavigate();
   const [showCreate, setShowCreate] = useState(false);
   const [showTravel, setShowTravel] = useState(false);
+  const [showDayOff, setShowDayOff] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const { currentOrg } = useOrg();
   const qc = useQueryClient();

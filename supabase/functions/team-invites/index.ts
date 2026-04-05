@@ -12,28 +12,29 @@ Deno.serve(async (req) => {
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  const anonKey = Deno.env.get('SUPABASE_PUBLISHABLE_KEY') || Deno.env.get('SUPABASE_ANON_KEY') || ''
 
-  // Get the caller's JWT from the Authorization header
-  const authHeader = req.headers.get('Authorization')?.replace('Bearer ', '')
-  if (!authHeader) {
+  // Validate caller's JWT
+  const authHeader = req.headers.get('Authorization')
+  if (!authHeader?.startsWith('Bearer ')) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
 
-  const supabaseUser = createClient(supabaseUrl, Deno.env.get('SUPABASE_PUBLISHABLE_KEY')!, {
-    global: { headers: { Authorization: `Bearer ${authHeader}` } },
-  })
-  const { data: { user } } = await supabaseUser.auth.getUser()
-  if (!user) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
-  }
-
+  // Use service role client to verify user and perform operations
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+  // Verify the user's token
+  const token = authHeader.replace('Bearer ', '')
+  const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+  if (authError || !user) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
 
   if (req.method === 'POST') {
     const { action, ...body } = await req.json()
@@ -60,14 +61,6 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
       }
-
-      // Check if already a member
-      const { data: existingMember } = await supabase
-        .from('organization_members')
-        .select('id')
-        .eq('organization_id', organizationId)
-        .eq('user_id', (await supabase.from('profiles').select('id').eq('id', email).maybeSingle()).data?.id || '00000000-0000-0000-0000-000000000000')
-        .maybeSingle()
 
       // Create invite record
       const { data: invite, error: inviteError } = await supabase
@@ -120,8 +113,8 @@ Deno.serve(async (req) => {
     }
 
     if (action === 'accept-invite') {
-      const { token } = body
-      if (!token) {
+      const { token: inviteToken } = body
+      if (!inviteToken) {
         return new Response(JSON.stringify({ error: 'Token required' }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -131,7 +124,7 @@ Deno.serve(async (req) => {
       const { data: invite } = await supabase
         .from('team_invites')
         .select('*')
-        .eq('token', token)
+        .eq('token', inviteToken)
         .eq('status', 'pending')
         .maybeSingle()
 
@@ -153,7 +146,6 @@ Deno.serve(async (req) => {
 
       if (memberError) {
         if (memberError.code === '23505') {
-          // Already a member, mark invite as accepted anyway
           await supabase.from('team_invites').update({ status: 'accepted' }).eq('id', invite.id)
           return new Response(JSON.stringify({ success: true, message: 'Already a member' }), {
             status: 200,

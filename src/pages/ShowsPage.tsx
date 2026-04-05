@@ -6,13 +6,13 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { Button } from "@/components/ui/button";
 import { Music, Plus, Calendar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useUpcomingShows } from "@/hooks/useData";
+import { useShows } from "@/hooks/useData";
 import { CreateShowModal } from "@/components/modals/CreateShowModal";
 import { format, isToday, parseISO } from "date-fns";
 
 export default function ShowsPage() {
   const navigate = useNavigate();
-  const { data: shows, isLoading } = useUpcomingShows();
+  const { data: shows, isLoading } = useShows();
   const [showCreate, setShowCreate] = useState(false);
 
   return (

@@ -5,7 +5,7 @@ import { EditTourModal } from "@/components/modals/EditTourModal";
 import { StatusChip } from "@/components/shared/StatusChip";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Button } from "@/components/ui/button";
-import { Calendar, Plus, Music, Plane, Car, Coffee, Trash2, MapPin } from "lucide-react";
+import { Calendar, Plus, Music, Plane, Car, Coffee, Trash2, MapPin, Pencil } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useShows, useTourTimeline } from "@/hooks/useData";
 import { CreateShowModal } from "@/components/modals/CreateShowModal";
@@ -21,6 +21,7 @@ export default function TourDetailPage() {
   const navigate = useNavigate();
   const [showCreate, setShowCreate] = useState(false);
   const [showTravel, setShowTravel] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
   const { currentOrg } = useOrg();
   const qc = useQueryClient();
 
@@ -96,6 +97,11 @@ export default function TourDetailPage() {
         action={
           <div className="flex gap-1">
             {isPrivileged && (
+              <Button size="icon" variant="ghost" onClick={() => setShowEdit(true)}>
+                <Pencil className="h-4 w-4" />
+              </Button>
+            )}
+            {isPrivileged && (
               <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setShowTravel(true)}>
                 <Plus className="h-4 w-4" /> Travel
               </Button>
@@ -159,6 +165,7 @@ export default function TourDetailPage() {
 
       <CreateShowModal open={showCreate} onOpenChange={setShowCreate} defaultTourId={id} />
       {id && <CreateTravelModal open={showTravel} onOpenChange={setShowTravel} tourId={id} />}
+      {tour && <EditTourModal open={showEdit} onOpenChange={setShowEdit} tour={tour} />}
     </div>
   );
 }

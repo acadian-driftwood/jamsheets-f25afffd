@@ -3,30 +3,23 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { InfoCard } from "@/components/shared/InfoCard";
 import { StatusChip } from "@/components/shared/StatusChip";
 import { Archive, Calendar } from "lucide-react";
-
-const demoArchived = [
-  {
-    id: "a1",
-    venue: "Troubadour",
-    city: "Los Angeles, CA",
-    date: "May 10, 2025",
-    tourName: "Spring Warmup",
-  },
-  {
-    id: "a2",
-    venue: "Bottom of the Hill",
-    city: "San Francisco, CA",
-    date: "May 8, 2025",
-    tourName: "Spring Warmup",
-  },
-];
+import { useArchivedShows } from "@/hooks/useData";
+import { format, parseISO } from "date-fns";
 
 export default function ArchivePage() {
+  const { data: shows, isLoading } = useArchivedShows();
+
   return (
     <div className="page-container animate-fade-in">
       <PageHeader title="Archive" subtitle="Past shows" />
 
-      {demoArchived.length === 0 ? (
+      {isLoading ? (
+        <div className="mt-6 space-y-3">
+          {[1, 2].map((i) => (
+            <div key={i} className="h-20 animate-pulse rounded-xl bg-muted" />
+          ))}
+        </div>
+      ) : !shows || shows.length === 0 ? (
         <EmptyState
           icon={Archive}
           title="No archived shows"
@@ -34,17 +27,16 @@ export default function ArchivePage() {
         />
       ) : (
         <div className="mt-6 space-y-3">
-          {demoArchived.map((show) => (
+          {shows.map((show) => (
             <InfoCard
               key={show.id}
               title={show.venue}
-              subtitle={show.city}
-              meta={show.tourName}
+              subtitle={show.city || undefined}
               chip={<StatusChip label="Archived" variant="muted" />}
             >
               <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Calendar className="h-3.5 w-3.5" />
-                <span>{show.date}</span>
+                <span>{format(parseISO(show.date + "T00:00:00"), "MMM d, yyyy")}</span>
               </div>
             </InfoCard>
           ))}

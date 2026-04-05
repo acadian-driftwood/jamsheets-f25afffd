@@ -1,52 +1,66 @@
 import { PageHeader } from "@/components/layout/PageHeader";
+import { useAuth } from "@/contexts/AuthContext";
+import { useOrg } from "@/contexts/OrgContext";
 import { ChevronRight, User, CreditCard, Users, Shield, LogOut, Music } from "lucide-react";
-
-const settingsSections = [
-  {
-    title: "Workspace",
-    items: [
-      { icon: Music, label: "Band Settings", path: "/settings/workspace" },
-      { icon: Users, label: "Team Members", path: "/settings/team" },
-      { icon: Shield, label: "Roles & Permissions", path: "/settings/roles" },
-      { icon: CreditCard, label: "Billing", path: "/settings/billing" },
-    ],
-  },
-  {
-    title: "Account",
-    items: [
-      { icon: User, label: "Profile", path: "/settings/profile" },
-      { icon: LogOut, label: "Sign Out", path: "/logout" },
-    ],
-  },
-];
+import { useNavigate } from "react-router-dom";
 
 export default function SettingsPage() {
+  const { signOut, user } = useAuth();
+  const { currentOrg } = useOrg();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/login");
+  };
+
+  const settingsSections = [
+    {
+      title: "Workspace",
+      items: [
+        { icon: Music, label: "Band Settings", action: () => {} },
+        { icon: Users, label: "Team Members", action: () => {} },
+        { icon: Shield, label: "Roles & Permissions", action: () => {} },
+        { icon: CreditCard, label: "Billing", action: () => {} },
+      ],
+    },
+    {
+      title: "Account",
+      items: [
+        { icon: User, label: "Profile", action: () => {} },
+        { icon: LogOut, label: "Sign Out", action: handleSignOut },
+      ],
+    },
+  ];
+
   return (
     <div className="page-container animate-fade-in">
       <PageHeader title="Settings" />
 
       <div className="mt-6 space-y-6">
-        {/* Workspace Indicator */}
-        <div className="card-elevated flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
-            <Music className="h-5 w-5 text-primary-foreground" />
+        {currentOrg && (
+          <div className="card-elevated flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
+              <Music className="h-5 w-5 text-primary-foreground" />
+            </div>
+            <div>
+              <p className="font-semibold">{currentOrg.organization.name}</p>
+              <p className="text-xs text-muted-foreground capitalize">{currentOrg.role}</p>
+            </div>
           </div>
-          <div>
-            <p className="font-semibold">The Midnight Riders</p>
-            <p className="text-xs text-muted-foreground">Pro Plan · 5 members</p>
-          </div>
-        </div>
+        )}
 
         {settingsSections.map((section) => (
           <section key={section.title}>
             <p className="section-title">{section.title}</p>
             <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
-              {section.items.map((item, i) => (
+              {section.items.map((item) => (
                 <button
                   key={item.label}
+                  onClick={item.action}
                   className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors active:bg-muted/50 border-b last:border-b-0"
                 >
-                  <item.icon className="h-4.5 w-4.5 text-muted-foreground" />
+                  <item.icon className="h-4 w-4 text-muted-foreground" />
                   <span className="flex-1 text-sm font-medium">{item.label}</span>
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 </button>
@@ -54,6 +68,10 @@ export default function SettingsPage() {
             </div>
           </section>
         ))}
+
+        <p className="text-center text-xs text-muted-foreground pt-4">
+          Signed in as {user?.email}
+        </p>
       </div>
     </div>
   );

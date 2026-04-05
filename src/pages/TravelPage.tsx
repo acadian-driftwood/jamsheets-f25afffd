@@ -1,12 +1,17 @@
+import { useState } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { InfoCard } from "@/components/shared/InfoCard";
 import { StatusChip } from "@/components/shared/StatusChip";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { Plane, Clock, Car, MapPin } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Plane, Clock, Car, MapPin, Plus } from "lucide-react";
 import { useOrg } from "@/contexts/OrgContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format, parseISO } from "date-fns";
+import { useTours } from "@/hooks/useData";
+import { CreateTravelModal } from "@/components/modals/CreateTravelModal";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
 const typeLabel: Record<string, string> = {
   flight: "Flight", rental_pickup: "Pickup", rental_dropoff: "Dropoff", rental_return: "Return", driving: "Drive",
@@ -25,6 +30,11 @@ export default function TravelPage() {
   const orgId = currentOrg?.organization.id;
   const today = new Date().toISOString().split("T")[0];
 
+  const { data: tours } = useTours();
+  const [showTourPicker, setShowTourPicker] = useState(false);
+  const [selectedTourId, setSelectedTourId] = useState<string | null>(null);
+  const [showCreate, setShowCreate] = useState(false);
+
   const { data: items, isLoading } = useQuery({
     queryKey: ["travel", orgId],
     queryFn: async () => {
@@ -42,6 +52,22 @@ export default function TravelPage() {
     enabled: !!orgId,
   });
 
+  const handleAddClick = () => {
+    if (!tours || tours.length === 0) return;
+    if (tours.length === 1) {
+      setSelectedTourId(tours[0].id);
+      setShowCreate(true);
+    } else {
+      setShowTourPicker(true);
+    }
+  };
+
+  const handleTourSelect = (tourId: string) => {
+    setSelectedTourId(tourId);
+    setShowTourPicker(false);
+    setShowCreate(true);
+  };
+
   // Group by date
   const grouped = (items || []).reduce<Record<string, typeof items>>((acc, item) => {
     if (!acc[item.date]) acc[item.date] = [];
@@ -49,9 +75,21 @@ export default function TravelPage() {
     return acc;
   }, {});
 
+  const hasTours = tours && tours.length > 0;
+
   return (
     <div className="page-container animate-fade-in">
-      <PageHeader title="Travel" subtitle="Upcoming flights, drives & rentals" />
+      <PageHeader
+        title="Travel"
+        subtitle="Upcoming flights, drives & rentals"
+        action={
+          hasTours ? (
+            <Button size="sm" className="gap-1.5 h-9 rounded-xl text-xs" onClick={handleAddClick}>
+              <Plus className="h-3.5 w-3.5" /> Add Travel
+            </Button>
+          ) : undefined
+        }
+      />
 
       {isLoading ? (
         <div className="mt-6 space-y-3">
@@ -62,6 +100,13 @@ export default function TravelPage() {
           icon={Plane}
           title="Nothing on the road yet"
           description="Travel items show up here when added to tours."
+          action={
+            hasTours ? (
+              <Button size="sm" className="rounded-xl" onClick={handleAddClick}>
+                <Plus className="h-3.5 w-3.5 mr-1" /> Add Travel
+              </Button>
+            ) : undefined
+          }
         />
       ) : (
         <div className="mt-5 space-y-4">
@@ -105,6 +150,42 @@ export default function TravelPage() {
             </div>
           ))}
         </div>
+      )}
+
+      {/* Tour picker sheet (when multiple tours exist) */}
+      <Sheet open={showTourPicker} onOpenChange={setShowTourPicker}>
+        <SheetContent side="bottom" className="rounded-t-2xl">
+          <SheetHeader>
+            <SheetTitle className="text-left">Select a Tour</SheetTitle>
+          </SheetHeader>
+          <div className="grid gap-2 mt-4 pb-4">
+            {tours?.map((tour) => (
+              <button
+                key={tour.id}
+                onClick={() => handleTourSelect(tour.id)}
+                className="flex items-center gap-3 p-3 rounded-xl border hover:bg-muted/50 transition-colors text-left"
+              >
+                <div>
+                  <p className="text-sm font-medium">{tour.name}</p>
+                  {tour.start_date && tour.end_date && (
+                    <p className="text-xs text-muted-foreground">
+                      {format(parseISO(tour.start_date + "T00:00:00"), "MMM d")} – {format(parseISO(tour.end_date + "T00:00:00"), "MMM d, yyyy")}
+                    </p>
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Create travel modal */}
+      {selectedTourId && (
+        <CreateTravelModal
+          open={showCreate}
+          onOpenChange={setShowCreate}
+          tourId={selectedTourId}
+        />
       )}
     </div>
   );

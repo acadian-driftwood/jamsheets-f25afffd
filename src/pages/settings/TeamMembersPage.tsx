@@ -121,6 +121,21 @@ export default function TeamMembersPage() {
     }
   };
 
+  const handleDeleteInvite = async (inviteId: string, email: string) => {
+    if (!confirm(`Delete the pending invite for ${email}?`)) return;
+    try {
+      const { data, error } = await supabase.functions.invoke("team-invites", {
+        body: { action: "delete-invite", inviteId, organizationId: orgId },
+      });
+      if (error) throw error;
+      if (data?.error) { toast.error(data.error); return; }
+      toast.success("Invite deleted");
+      qc.invalidateQueries({ queryKey: ["org-invites"] });
+    } catch (e: any) {
+      toast.error(e.message || "Failed to delete invite");
+    }
+  };
+
   const handleRemove = async (memberId: string, memberName: string) => {
     if (!confirm(`Remove ${memberName} from the team?`)) return;
     const { error } = await supabase.from("organization_members").delete().eq("id", memberId);
@@ -183,16 +198,27 @@ export default function TeamMembersPage() {
                 <div className="flex items-center gap-2 shrink-0">
                   <StatusChip label="Pending" variant="warning" />
                   {isAdmin && (
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-7 w-7"
-                      disabled={resendingId === inv.id}
-                      onClick={() => handleResend(inv.id, inv.email)}
-                      title="Resend invite"
-                    >
-                      <RefreshCw className={`h-3.5 w-3.5 ${resendingId === inv.id ? "animate-spin" : ""}`} />
-                    </Button>
+                    <>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7"
+                        disabled={resendingId === inv.id}
+                        onClick={() => handleResend(inv.id, inv.email)}
+                        title="Resend invite"
+                      >
+                        <RefreshCw className={`h-3.5 w-3.5 ${resendingId === inv.id ? "animate-spin" : ""}`} />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7 text-destructive"
+                        onClick={() => handleDeleteInvite(inv.id, inv.email)}
+                        title="Delete invite"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </>
                   )}
                 </div>
               </div>

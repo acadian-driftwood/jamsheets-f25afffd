@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useOrg } from "@/contexts/OrgContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 
@@ -8,6 +9,7 @@ export default function JoinPage() {
   const [params] = useSearchParams();
   const token = params.get("token");
   const { user, loading } = useAuth();
+  const { refetch } = useOrg();
   const navigate = useNavigate();
   const [status, setStatus] = useState<"idle" | "joining" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
@@ -25,6 +27,11 @@ export default function JoinPage() {
       });
       if (error) throw error;
       if (data?.error) { setErrorMsg(data.error); setStatus("error"); return; }
+      // Refresh org list so RequireOrg sees the new membership
+      await refetch();
+      if (data?.organizationId) {
+        localStorage.setItem("jamsheets_current_org", data.organizationId);
+      }
       setStatus("success");
       setTimeout(() => navigate("/today"), 1500);
     } catch (e: any) {

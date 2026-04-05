@@ -4,7 +4,7 @@ import { EditTourModal } from "@/components/modals/EditTourModal";
 import { StatusChip } from "@/components/shared/StatusChip";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Button } from "@/components/ui/button";
-import { Plus, Music, Plane, Car, Coffee, MapPin, Pencil, ChevronRight } from "lucide-react";
+import { Plus, Music, Plane, Car, Coffee, MapPin, Pencil, ChevronRight, CalendarOff } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useShows, useTourTimeline } from "@/hooks/useData";
 import { CreateShowModal } from "@/components/modals/CreateShowModal";

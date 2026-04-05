@@ -1,88 +1,86 @@
 
 
-# Multi-Band Switching for Manager Plan
+# Tour Creation + Show Swipe Navigation
 
-## Current state
+## Overview
 
-The infrastructure for multiple organizations already exists:
-- `OrgContext` fetches all orgs a user belongs to and stores them in `organizations[]`
-- `setCurrentOrgId()` switches the active org and persists to localStorage
-- A user can already be an `owner` of multiple organizations in `organization_members`
+Two UX improvements: (1) make tour creation timeline-first with required dates, and (2) add swipe navigation between shows within a tour.
 
-What's **missing**: there's no UI to create additional bands or switch between them, and the onboarding flow only runs when a user has zero orgs.
+---
 
-## How it works
+## 1. Timeline-First Tour Creation
 
-- **Owner on Manager plan**: Can create additional bands and switch freely between them. All data is scoped per-org via RLS, so switching orgs changes all visible tours/shows/travel.
-- **Invited members**: They only appear in `organization_members` for the band they were invited to. They never see the switcher (they belong to one org). Their data is isolated by RLS.
-- **Free/Band plans**: Creating additional bands is blocked. The switcher is hidden if you only have one org.
+### CreateTourModal changes
+- Make start date and end date **required** fields
+- Validate end date >= start date, show inline error if not
+- On successful creation, navigate to `/tours/{newTourId}` immediately (currently just closes the modal)
+- Return the created tour data from the mutation so we can navigate
 
-## Plan
+### TourDetailPage — full-date-range timeline
+- Instead of only showing days that have items, render **every day** in the tour's start-to-end date range
+- Each day gets a row in the timeline; days with no items show a subtle "empty" state with a quick-add button
+- Quick-add button on empty days opens a picker: Show / Flight / Rental Car / Driving / Day Off
+- Visual distinction per day type:
+  - **Show day**: orange accent dot/left border
+  - **Travel day** (flight/driving/rental): blue or warning styling (existing)
+  - **Off day**: muted/gray with coffee icon
+  - **Empty day**: dashed border, light background, "Nothing planned" text
+- Show a summary bar at top: "12 days · 6 shows · 3 travel · 2 off · 1 empty"
+- Keep all existing timeline functionality (spine, date dividers, item cards)
 
-### 1. Add "Create New Band" capability (Manager only)
+### Quick-add day sheet
+- New component: a small bottom sheet or popover that appears when tapping "+" on an empty day
+- Pre-fills the date for the selected day
+- Options: Show, Flight, Rental Car, Driving, Day Off
+- Tapping an option opens the corresponding existing modal (CreateShowModal, CreateTravelModal, CreateDayOffModal) with the date pre-filled
 
-On the **More** page, below the current org card, add a **"Create New Band"** button visible only to users whose current org is on the Manager plan. Tapping opens a sheet/modal with a band name input — same logic as `OnboardingPage` but without navigating away. After creation, the user is added as owner and the new org gets a Free subscription (they can upgrade it separately, or we link it to the parent Manager subscription — starting simple with independent subscriptions).
+### Modal date pre-fill
+- Update CreateShowModal, CreateTravelModal, and CreateDayOffModal to accept an optional `defaultDate` prop
+- When provided, pre-fill the date field with that value
 
-### 2. Add org switcher to More page
+---
 
-Replace the static org card at the top of the More page with a tappable org switcher:
-- Shows current band name + role
-- Tapping opens a sheet listing all orgs the user belongs to
-- Each row shows band name and role badge
-- Selecting one calls `setCurrentOrgId()` which re-scopes all data
-- Only appears as interactive if `organizations.length > 1`
+## 2. Swipe Navigation Between Tour Shows
 
-### 3. Gate "Create New Band" behind Manager plan
+### ShowDetailPage changes
+- If the show has a `tour_id`, fetch all shows for that tour (sorted by date)
+- Determine current show index and total count
+- Display "Show 3 of 8" indicator below the header
+- Show subtle prev/next arrows or chevrons at edges
 
-In the switcher sheet or More page:
-- If current plan is Manager: show "Create New Band" button at the bottom of the org list
-- If not Manager but user has multiple orgs (edge case): still show switcher, but no create button
-- If Free/Band with one org: show the org card as-is (no switcher affordance)
+### Swipe implementation
+- Use `embla-carousel-react` (already installed for the carousel component) to wrap the show content in a swipeable container
+- Three slides: previous show, current show, next show
+- On swipe complete, navigate to the new show URL (`/shows/{id}`)
+- Prefetch adjacent show data using `queryClient.prefetchQuery` for instant transitions
 
-### 4. Backend enforcement
+### Navigation indicator
+- Small pill below the header: `← The Fillmore | Show 3 of 8 | The Ryman →`
+- Tapping left/right text navigates to that show
+- On first/last show, hide the corresponding arrow
 
-Add a `check_workspace_limit()` database function:
-- Free: max 1 org owned
-- Band: max 1 org owned  
-- Manager: unlimited (or cap at a reasonable number like 10)
+---
 
-Check this before allowing org creation. The check counts orgs where the user is `owner`, cross-referenced with their highest plan tier.
-
-### Files changed
+## Files to create/modify
 
 | File | Change |
 |------|--------|
-| `src/pages/MorePage.tsx` | Add org switcher card + "Create New Band" button |
-| `src/components/modals/OrgSwitcherSheet.tsx` | New — sheet listing all orgs with switch + create |
-| `src/hooks/useSubscription.ts` | Add `workspaces` limit to `PLAN_LIMITS` (already has the field) |
-| `src/contexts/OrgContext.tsx` | No changes needed — already supports multi-org |
-| Migration | Add `check_workspace_limit()` function |
+| `src/components/modals/CreateTourModal.tsx` | Require dates, validate, navigate on success |
+| `src/pages/TourDetailPage.tsx` | Full date-range timeline, empty days, quick-add, summary bar |
+| `src/components/tour/QuickAddSheet.tsx` | **New** — day-type picker for empty days |
+| `src/components/modals/CreateShowModal.tsx` | Add `defaultDate` prop |
+| `src/components/modals/CreateTravelModal.tsx` | Add `defaultDate` prop |
+| `src/components/modals/CreateDayOffModal.tsx` | Add `defaultDate` prop |
+| `src/pages/ShowDetailPage.tsx` | Tour show sequence indicator + swipe navigation |
+| `src/hooks/useData.ts` | No changes needed (useShows with tourId already exists) |
 
-### UX flow
+---
 
-```text
-More page (Manager, 2+ bands):
-┌─────────────────────────┐
-│ 🎵 The Midnight Riders  │
-│    owner · Band plan     │
-│              ▾ Switch    │
-├─────────────────────────┤
-│ Archive            →     │
-│ Settings           →     │
-│ Profile            →     │
-│ Sign Out                 │
-└─────────────────────────┘
+## Technical notes
 
-Tapping "Switch" opens sheet:
-┌─────────────────────────┐
-│ Your Bands              │
-│                         │
-│ ● The Midnight Riders   │
-│   The Side Project   →  │
-│                         │
-│ + Create New Band       │
-└─────────────────────────┘
-```
-
-Non-owner members with one org see no switcher. The card is static, as it is today.
+- `eachDayOfInterval` from date-fns generates every day between tour start/end
+- Embla carousel is already a project dependency — reuse for swipe
+- Prefetch via `queryClient.prefetchQuery({ queryKey: ["show", adjacentId] })` 
+- Swipe uses `onSelect` callback from Embla to trigger `navigate()` after settling
+- No database changes required — all data structures already support this
 

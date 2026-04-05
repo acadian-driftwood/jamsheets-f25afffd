@@ -461,9 +461,16 @@ export default function ShowDetailPage() {
         subtitle={show.city || undefined}
         back
         action={
-          <Button variant="ghost" size="icon" onClick={() => setEditOpen(true)}>
-            <Edit2 className="h-4 w-4" />
-          </Button>
+          <div className="flex gap-1">
+            <Button variant="ghost" size="icon" onClick={() => setEditOpen(true)}>
+              <Edit2 className="h-4 w-4" />
+            </Button>
+            {isPrivileged && (
+              <Button variant="ghost" size="icon" className="text-destructive" onClick={handleDeleteShow}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         }
       />
 

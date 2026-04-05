@@ -121,6 +121,21 @@ export default function TeamMembersPage() {
     }
   };
 
+  const handleDeleteInvite = async (inviteId: string, email: string) => {
+    if (!confirm(`Delete the pending invite for ${email}?`)) return;
+    try {
+      const { data, error } = await supabase.functions.invoke("team-invites", {
+        body: { action: "delete-invite", inviteId, organizationId: orgId },
+      });
+      if (error) throw error;
+      if (data?.error) { toast.error(data.error); return; }
+      toast.success("Invite deleted");
+      qc.invalidateQueries({ queryKey: ["org-invites"] });
+    } catch (e: any) {
+      toast.error(e.message || "Failed to delete invite");
+    }
+  };
+
   const handleRemove = async (memberId: string, memberName: string) => {
     if (!confirm(`Remove ${memberName} from the team?`)) return;
     const { error } = await supabase.from("organization_members").delete().eq("id", memberId);

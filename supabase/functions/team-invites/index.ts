@@ -182,6 +182,46 @@ Deno.serve(async (req) => {
       })
     }
 
+    if (action === 'delete-invite') {
+      const { inviteId, organizationId } = body
+      if (!inviteId || !organizationId) {
+        return new Response(JSON.stringify({ error: 'inviteId and organizationId required' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      const { data: hasDeleteRole } = await supabase.rpc('has_org_role', {
+        _user_id: user.id,
+        _org_id: organizationId,
+        _roles: ['owner', 'admin'],
+      })
+      if (!hasDeleteRole) {
+        return new Response(JSON.stringify({ error: 'Insufficient permissions' }), {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      const { error: deleteError } = await supabase
+        .from('team_invites')
+        .delete()
+        .eq('id', inviteId)
+        .eq('organization_id', organizationId)
+
+      if (deleteError) {
+        return new Response(JSON.stringify({ error: 'Failed to delete invite' }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
     if (action === 'accept-invite') {
       const { token: inviteToken } = body
       if (!inviteToken) {

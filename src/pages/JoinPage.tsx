@@ -198,7 +198,7 @@ export default function JoinPage() {
           /* User is authenticated but join hasn't triggered yet */
           <div className="text-center space-y-4">
             <p className="text-sm text-muted-foreground">You've been invited to join a team on JamSheets.</p>
-            <Button onClick={handleJoin} disabled={status === "joining"} className="w-full">
+            <Button onClick={handleJoin} className="w-full">
               Accept Invite
             </Button>
           </div>

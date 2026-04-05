@@ -288,7 +288,7 @@ export function CreateTravelModal({ open, onOpenChange, tourId }: Props) {
               </div>
             </div>
 
-            {(travelType === "driving" || (travelType !== "driving" && tripType === "one_way")) && (
+            {(travelType === "driving" || tripType === "one_way") && (
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="mb-1.5 block text-sm font-medium">{travelType === "rental" ? "Dropoff Date" : "Arrival Date"}</label>

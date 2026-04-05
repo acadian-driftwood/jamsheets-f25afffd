@@ -18,16 +18,16 @@ export default function SettingsPage() {
     {
       title: "Workspace",
       items: [
-        { icon: Music, label: "Band Settings", action: () => {} },
-        { icon: Users, label: "Team Members", action: () => {} },
-        { icon: Shield, label: "Roles & Permissions", action: () => {} },
-        { icon: CreditCard, label: "Billing", action: () => {} },
+        { icon: Music, label: "Band Settings", action: () => navigate("/settings/band") },
+        { icon: Users, label: "Team Members", action: () => navigate("/settings/team") },
+        { icon: Shield, label: "Roles & Permissions", action: () => navigate("/settings/roles") },
+        { icon: CreditCard, label: "Billing", action: () => navigate("/settings/billing") },
       ],
     },
     {
       title: "Account",
       items: [
-        { icon: User, label: "Profile", action: () => {} },
+        { icon: User, label: "Profile", action: () => navigate("/settings/profile") },
         { icon: LogOut, label: "Sign Out", action: handleSignOut },
       ],
     },

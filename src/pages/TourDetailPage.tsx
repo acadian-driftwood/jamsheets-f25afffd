@@ -477,10 +477,14 @@ export default function TourDetailPage() {
                             />
 
                             {isOffDay ? (
-                              <div className="flex items-center gap-2 py-2 text-sm text-muted-foreground">
+                              <button
+                                onClick={() => navigate(`/off-day/${item.id}`)}
+                                className="flex items-center gap-2 py-2 text-sm text-muted-foreground press-scale active:text-foreground transition-colors"
+                              >
                                 <Coffee className="h-3.5 w-3.5" />
                                 <span>Day off</span>
-                              </div>
+                                <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50" />
+                              </button>
                             ) : (
                               <button
                             onClick={isShow ? () => navigate(`/shows/${item.showId}`) : () => navigate(`/travel/${item.id}`)}

@@ -102,7 +102,7 @@ function SortableItem({
             </button>
           )}
           <button
-            onClick={() => navigate(`/travel/${item.id}`)}
+            onClick={() => navigate(`/off-day/${item.id}`)}
             className="flex items-center gap-2 press-scale active:text-foreground transition-colors"
           >
             <Coffee className="h-3.5 w-3.5" />

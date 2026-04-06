@@ -13,6 +13,7 @@ import ShowsPage from "./pages/ShowsPage";
 import ShowDetailPage from "./pages/ShowDetailPage";
 import TravelPage from "./pages/TravelPage";
 import TravelDetailPage from "./pages/TravelDetailPage";
+import OffDayDetailPage from "./pages/OffDayDetailPage";
 import ArchivePage from "./pages/ArchivePage";
 import SettingsPage from "./pages/SettingsPage";
 import MorePage from "./pages/MorePage";
@@ -88,6 +89,7 @@ function AppRoutes() {
         <Route path="/shows/:id" element={<ShowDetailPage />} />
         <Route path="/travel" element={<TravelPage />} />
         <Route path="/travel/:id" element={<TravelDetailPage />} />
+        <Route path="/off-day/:id" element={<OffDayDetailPage />} />
         <Route path="/more" element={<MorePage />} />
         <Route path="/archive" element={<ArchivePage />} />
         <Route path="/settings" element={<SettingsPage />} />

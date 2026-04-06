@@ -36,7 +36,8 @@ export function CreateTravelModal({ open, onOpenChange, tourId, defaultDate, def
   const [saving, setSaving] = useState(false);
 
   // Common fields
-  const [title, setTitle] = useState("");
+  const defaultTitle = defaultSubtype === "flight" ? "Flight" : defaultSubtype === "rental" ? "Rental Car" : defaultSubtype === "driving" ? "Drive" : "";
+  const [title, setTitle] = useState(defaultTitle);
   const [departureLocation, setDepartureLocation] = useState("");
   const [arrivalLocation, setArrivalLocation] = useState("");
   const [departureDate, setDepartureDate] = useState(defaultDate || "");

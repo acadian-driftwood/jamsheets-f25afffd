@@ -123,6 +123,7 @@ export default function TravelPage() {
                   return (
                     <InfoCard
                       key={item.id}
+                      onClick={() => navigate(`/travel/${item.id}`)}
                       icon={Icon}
                       title={item.title}
                       subtitle={item.subtitle || undefined}

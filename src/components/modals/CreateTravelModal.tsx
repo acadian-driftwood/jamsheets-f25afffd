@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,17 +30,34 @@ export function CreateTravelModal({ open, onOpenChange, tourId, defaultDate, def
     if (s === "rental") return "rental";
     return "driving";
   };
+  const resolveTitle = (s?: string) => s === "flight" ? "Flight" : s === "rental" ? "Rental Car" : s === "driving" ? "Drive" : "";
+
   const [step, setStep] = useState<"type" | "form">(defaultSubtype ? "form" : "type");
   const [travelType, setTravelType] = useState<TravelType>(defaultSubtype ? resolveType(defaultSubtype) : "driving");
   const [tripType, setTripType] = useState<"one_way" | "round_trip">("one_way");
   const [saving, setSaving] = useState(false);
 
   // Common fields
-  const defaultTitle = defaultSubtype === "flight" ? "Flight" : defaultSubtype === "rental" ? "Rental Car" : defaultSubtype === "driving" ? "Drive" : "";
-  const [title, setTitle] = useState(defaultTitle);
+  const [title, setTitle] = useState(resolveTitle(defaultSubtype));
   const [departureLocation, setDepartureLocation] = useState("");
   const [arrivalLocation, setArrivalLocation] = useState("");
   const [departureDate, setDepartureDate] = useState(defaultDate || "");
+
+  // Sync props when modal opens
+  useEffect(() => {
+    if (open) {
+      if (defaultSubtype) {
+        setStep("form");
+        setTravelType(resolveType(defaultSubtype));
+        setTitle(resolveTitle(defaultSubtype));
+      } else {
+        setStep("type");
+      }
+      if (defaultDate) {
+        setDepartureDate(defaultDate);
+      }
+    }
+  }, [open, defaultSubtype, defaultDate]);
   const [departureTime, setDepartureTime] = useState("");
   const [arrivalDate, setArrivalDate] = useState("");
   const [arrivalTime, setArrivalTime] = useState("");
@@ -288,7 +305,7 @@ export function CreateTravelModal({ open, onOpenChange, tourId, defaultDate, def
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="mb-1.5 block text-sm font-medium">{travelType === "rental" ? "Pickup Date" : "Departure Date"}</label>
-                <Input type="date" value={departureDate} onChange={e => setDepartureDate(e.target.value)} disabled={!!defaultDate} />
+                <Input type="date" value={departureDate} onChange={e => { if (!defaultDate) setDepartureDate(e.target.value); }} readOnly={!!defaultDate} className={defaultDate ? "bg-muted cursor-default" : ""} />
               </div>
               <div>
                 <label className="mb-1.5 block text-sm font-medium">Time</label>

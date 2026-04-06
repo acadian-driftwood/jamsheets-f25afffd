@@ -1,10 +1,10 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { EditTourModal } from "@/components/modals/EditTourModal";
 import { StatusChip } from "@/components/shared/StatusChip";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Button } from "@/components/ui/button";
-import { Plus, Music, Plane, Car, Coffee, MapPin, Pencil, ChevronRight } from "lucide-react";
+import { Plus, Music, Plane, Car, Coffee, MapPin, Pencil, ChevronRight, GripVertical } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useShows, useTourTimeline } from "@/hooks/useData";
 import { CreateShowModal } from "@/components/modals/CreateShowModal";
@@ -17,6 +17,22 @@ import { useOrg } from "@/contexts/OrgContext";
 import { format, parseISO, eachDayOfInterval } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 type MergedItem = {
   id: string;
@@ -26,7 +42,104 @@ type MergedItem = {
   subtitle?: string;
   timeStart?: string;
   showId?: string;
+  sortOrder: number;
+  source: "show" | "timeline";
 };
+
+function SortableItem({
+  item,
+  isPrivileged,
+  showGrip,
+  navigate,
+  typeIcon,
+  chipLabel,
+  chipVariant,
+  dotColor,
+}: {
+  item: MergedItem;
+  isPrivileged: boolean;
+  showGrip: boolean;
+  navigate: (path: string) => void;
+  typeIcon: (type: string) => any;
+  chipLabel: (type: string) => string;
+  chipVariant: (type: string) => "accent" | "warning" | "muted";
+  dotColor: (type: string) => string;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: item.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : undefined,
+    opacity: isDragging ? 0.9 : 1,
+  };
+
+  const Icon = typeIcon(item.type);
+  const isShow = item.type === "show";
+  const isOffDay = item.type === "off_day";
+
+  return (
+    <div ref={setNodeRef} style={style} className="relative">
+      <span
+        className={cn(
+          "absolute -left-[calc(1.25rem+5px)] top-3 timeline-dot",
+          dotColor(item.type)
+        )}
+      />
+
+      {isOffDay ? (
+        <div className="flex items-center gap-2 py-2 text-sm text-muted-foreground">
+          {showGrip && isPrivileged && (
+            <button {...attributes} {...listeners} className="touch-none cursor-grab active:cursor-grabbing p-0.5 -ml-1">
+              <GripVertical className="h-4 w-4 text-muted-foreground/40" />
+            </button>
+          )}
+          <Coffee className="h-3.5 w-3.5" />
+          <span>Day off</span>
+        </div>
+      ) : (
+        <div className={cn("flex items-center gap-0", isDragging && "shadow-lg rounded-xl")}>
+          {showGrip && isPrivileged && (
+            <button {...attributes} {...listeners} className="touch-none cursor-grab active:cursor-grabbing p-0.5 -ml-1 shrink-0">
+              <GripVertical className="h-4 w-4 text-muted-foreground/40" />
+            </button>
+          )}
+          <button
+            onClick={isShow ? () => navigate(`/shows/${item.showId}`) : undefined}
+            className={cn(
+              "w-full rounded-xl border bg-card p-3 text-left transition-all press-scale",
+              isShow && "active:bg-muted/40"
+            )}
+          >
+            <div className="flex items-center gap-2.5">
+              <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold truncate">{item.title}</span>
+                  <StatusChip label={chipLabel(item.type)} variant={chipVariant(item.type)} />
+                </div>
+                {item.subtitle && (
+                  <p className="text-xs text-muted-foreground truncate mt-0.5">{item.subtitle}</p>
+                )}
+                {item.timeStart && (
+                  <p className="text-[11px] text-muted-foreground mt-0.5">{item.timeStart}</p>
+                )}
+              </div>
+              {isShow && <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/50" />}
+            </div>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function TourDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -42,6 +155,11 @@ export default function TourDetailPage() {
   const qc = useQueryClient();
 
   const isPrivileged = currentOrg && ["owner", "admin", "tm"].includes(currentOrg.role);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } })
+  );
 
   const { data: tour } = useQuery({
     queryKey: ["tour", id],
@@ -77,12 +195,30 @@ export default function TourDetailPage() {
   const merged: MergedItem[] = useMemo(() => {
     const items: MergedItem[] = [];
     shows?.forEach((s) => {
-      items.push({ id: s.id, type: "show", date: s.date, title: s.venue, subtitle: s.city || undefined, showId: s.id });
+      items.push({
+        id: s.id,
+        type: "show",
+        date: s.date,
+        title: s.venue,
+        subtitle: s.city || undefined,
+        showId: s.id,
+        sortOrder: (s as any).sort_order ?? 0,
+        source: "show",
+      });
     });
     timelineItems?.forEach((t) => {
-      items.push({ id: t.id, type: t.type, date: t.date, title: t.title, subtitle: t.subtitle || undefined, timeStart: t.time_start || undefined });
+      items.push({
+        id: t.id,
+        type: t.type,
+        date: t.date,
+        title: t.title,
+        subtitle: t.subtitle || undefined,
+        timeStart: t.time_start || undefined,
+        sortOrder: (t as any).sort_order ?? 0,
+        source: "timeline",
+      });
     });
-    items.sort((a, b) => a.date.localeCompare(b.date));
+    items.sort((a, b) => a.date.localeCompare(b.date) || a.sortOrder - b.sortOrder);
     return items;
   }, [shows, timelineItems]);
 
@@ -173,6 +309,47 @@ export default function TourDetailPage() {
     }
   };
 
+  const handleDragEnd = useCallback(
+    async (event: DragEndEvent, date: string) => {
+      const { active, over } = event;
+      if (!over || active.id === over.id) return;
+
+      const dayItems = itemsByDate[date];
+      if (!dayItems) return;
+
+      const oldIndex = dayItems.findIndex((i) => i.id === active.id);
+      const newIndex = dayItems.findIndex((i) => i.id === over.id);
+      if (oldIndex === -1 || newIndex === -1) return;
+
+      const reordered = arrayMove(dayItems, oldIndex, newIndex);
+
+      // Persist sort_order updates
+      const updates = reordered.map((item, idx) => ({
+        id: item.id,
+        sortOrder: idx,
+        source: item.source,
+      }));
+
+      try {
+        await Promise.all(
+          updates.map((u) => {
+            const table = u.source === "show" ? "shows" : "tour_timeline_items";
+            return supabase
+              .from(table)
+              .update({ sort_order: u.sortOrder } as any)
+              .eq("id", u.id)
+              .throwOnError();
+          })
+        );
+        qc.invalidateQueries({ queryKey: ["shows"] });
+        qc.invalidateQueries({ queryKey: ["tour-timeline", id] });
+      } catch {
+        toast.error("Failed to reorder items");
+      }
+    },
+    [itemsByDate, id, qc]
+  );
+
   // Determine which days to render
   const daysToRender = allDays.length > 0 ? allDays : Object.keys(itemsByDate).sort();
 
@@ -232,6 +409,7 @@ export default function TourDetailPage() {
             {daysToRender.map((date) => {
               const items = itemsByDate[date] || [];
               const isEmpty = items.length === 0;
+              const showGrip = items.length >= 2;
 
               return (
                 <div key={date}>
@@ -258,8 +436,29 @@ export default function TourDetailPage() {
                           <div className="py-2 text-xs text-muted-foreground pl-1">Nothing planned</div>
                         )}
                       </div>
+                    ) : showGrip && isPrivileged ? (
+                      <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragEnd={(e) => handleDragEnd(e, date)}
+                      >
+                        <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
+                          {items.map((item) => (
+                            <SortableItem
+                              key={item.id}
+                              item={item}
+                              isPrivileged={!!isPrivileged}
+                              showGrip={showGrip}
+                              navigate={navigate}
+                              typeIcon={typeIcon}
+                              chipLabel={chipLabel}
+                              chipVariant={chipVariant}
+                              dotColor={dotColor}
+                            />
+                          ))}
+                        </SortableContext>
+                      </DndContext>
                     ) : (
-                      /* Items for this day */
                       items.map((item) => {
                         const Icon = typeIcon(item.type);
                         const isShow = item.type === "show";

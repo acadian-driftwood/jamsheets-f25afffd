@@ -1,47 +1,37 @@
 
 
-# Fix Quick-Add Flow, Add Travel Detail Page with Delete, Lock Dates
+# Fix Quick-Add Flow, Travel Type Skip, and Date Display
 
-## Three changes
+## Root Causes
 
-### 1. Skip redundant travel type picker from QuickAddSheet
+### Issues #1 and #2: Travel type picker not being skipped
+`useState` initial values only run on first mount. When the `CreateTravelModal` reopens with a new `defaultSubtype`, the `step` and `travelType` states retain their previous values. Same problem affects `departureDate` not picking up `defaultDate`. Need `useEffect` hooks to sync state when these props change.
 
-When the user taps "Flight", "Rental Car", or "Drive" from the tour timeline, the type is already known. Pass `defaultSubtype` to `CreateTravelModal` so it skips the type-selection step and goes straight to the form.
+### Issue #3: Date input grayed out and empty
+Using `disabled` on the date `<Input>` grays it out and on some browsers hides the value. Should use `readOnly` instead and add a subtle style so it looks filled but non-editable. Also, the `CreateShowModal` has the same stale-state bug — `date` is initialized from `defaultDate` via `useState` but doesn't update when the prop changes on subsequent opens.
 
-**Files:**
-- **`CreateTravelModal.tsx`** — accept optional `defaultSubtype` prop. When set, initialize `step="form"` and `travelType` to match. Hide the "Back" button (no type step to return to). On close, reset properly.
-- **`TourDetailPage.tsx`** — pass `travelSubtype` as `defaultSubtype` prop to `CreateTravelModal`.
+## Changes
 
-### 2. Travel detail page with delete at the bottom (like shows)
+### `src/components/modals/CreateTravelModal.tsx`
+- Add `useEffect` to sync `step`, `travelType`, `title`, and `departureDate` when `defaultSubtype` or `defaultDate` change (or when `open` becomes true)
+- Change date input from `disabled={!!defaultDate}` to `readOnly={!!defaultDate}` with a muted background class
 
-Create a new `TravelDetailPage` at `/travel/:id` that displays the travel item's details and includes a Danger Zone section at the bottom for privileged users to delete it — matching the pattern on `ShowDetailPage`.
+### `src/components/modals/CreateShowModal.tsx`
+- Add `useEffect` to sync `date` state when `defaultDate` changes or modal opens
+- Change date input from `disabled={!!defaultDate}` to `readOnly={!!defaultDate}` with styling that shows the value clearly
 
-**New file: `src/pages/TravelDetailPage.tsx`**
-- Fetch the `tour_timeline_items` record by ID
-- Display all relevant fields (title, type, locations, dates/times, airline, confirmation, rental company, traveler, notes)
-- Danger Zone at the bottom with "Delete Travel Item" button (confirm dialog, then delete from `tour_timeline_items`, also delete any linked items, navigate back)
-- Edit button in header for privileged users (stretch — can skip for now and just do view + delete)
+### `src/components/modals/CreateDayOffModal.tsx`
+- Add `useEffect` to sync `date` when `defaultDate` changes or modal opens
+- Same `readOnly` treatment for the date input
 
-**`App.tsx`** — add route `/travel/:id` pointing to `TravelDetailPage`
+### All three modals — date styling
+Instead of `disabled` (which grays out and can hide value), use `readOnly` + `className="bg-muted cursor-default"` so the date is visible but clearly non-editable.
 
-**`TourDetailPage.tsx`** — make travel/day-off cards tappable, navigating to `/travel/{item.id}`. Update both the `SortableItem` component and the non-sortable rendering to add `onClick={() => navigate(\`/travel/${item.id}\`)}` and a `ChevronRight` icon for non-show timeline items.
-
-### 3. Lock the date field when `defaultDate` is provided
-
-When adding from the tour timeline, the date is already determined.
-
-- **`CreateShowModal.tsx`** — disable date input when `defaultDate` is set
-- **`CreateTravelModal.tsx`** — disable departure date input when `defaultDate` is set
-- **`CreateDayOffModal.tsx`** — disable date input when `defaultDate` is set
-
-## Files summary
+## Files
 
 | File | Change |
 |------|--------|
-| `src/pages/TravelDetailPage.tsx` | New — detail view with Danger Zone delete |
-| `src/App.tsx` | Add `/travel/:id` route |
-| `src/pages/TourDetailPage.tsx` | Make travel cards tappable, pass `defaultSubtype` to CreateTravelModal |
-| `src/components/modals/CreateTravelModal.tsx` | Accept `defaultSubtype`, skip type step, lock date |
-| `src/components/modals/CreateShowModal.tsx` | Lock date when `defaultDate` set |
-| `src/components/modals/CreateDayOffModal.tsx` | Lock date when `defaultDate` set |
+| `src/components/modals/CreateTravelModal.tsx` | Add useEffect for prop sync, readOnly date |
+| `src/components/modals/CreateShowModal.tsx` | Add useEffect for date sync, readOnly date |
+| `src/components/modals/CreateDayOffModal.tsx` | Add useEffect for date sync, readOnly date |
 

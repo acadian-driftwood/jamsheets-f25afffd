@@ -1,37 +1,32 @@
 
+Fix the missing path into the existing delete screen for travel items.
 
-# Fix Quick-Add Flow, Travel Type Skip, and Date Display
+What’s actually broken
+- The delete/detail page already exists (`src/pages/TravelDetailPage.tsx`) and the `/travel/:id` route is already registered.
+- The main gap is `src/pages/TravelPage.tsx`: each travel row is rendered as an `InfoCard` without `onClick`, so it becomes a plain `div` instead of a tappable card.
+- There is also one unfinished timeline case in `src/pages/TourDetailPage.tsx`: off-day rows still render as static text, so they cannot reach the same delete view either.
 
-## Root Causes
+Implementation
+1. Wire up Travel tab navigation
+- Update `src/pages/TravelPage.tsx`
+- Add `useNavigate`
+- Pass `onClick={() => navigate(\`/travel/${item.id}\`)}` to each `InfoCard`
+- Reuse the existing `InfoCard` click treatment so the whole card becomes tappable and shows the chevron automatically
 
-### Issues #1 and #2: Travel type picker not being skipped
-`useState` initial values only run on first mount. When the `CreateTravelModal` reopens with a new `defaultSubtype`, the `step` and `travelType` states retain their previous values. Same problem affects `departureDate` not picking up `defaultDate`. Need `useEffect` hooks to sync state when these props change.
+2. Finish timeline item navigation
+- Update `src/pages/TourDetailPage.tsx`
+- Make off-day rows open `/travel/:id` too, instead of rendering as non-clickable text
+- Keep the drag grip separate so privileged users can still reorder without accidental navigation
 
-### Issue #3: Date input grayed out and empty
-Using `disabled` on the date `<Input>` grays it out and on some browsers hides the value. Should use `readOnly` instead and add a subtle style so it looks filled but non-editable. Also, the `CreateShowModal` has the same stale-state bug — `date` is initialized from `defaultDate` via `useState` but doesn't update when the prop changes on subsequent opens.
+3. Keep the delete flow as-is
+- Leave `src/pages/TravelDetailPage.tsx` as the delete surface
+- No database changes are needed; the current Danger Zone logic already handles deletion
 
-## Changes
+Files
+- `src/pages/TravelPage.tsx`
+- `src/pages/TourDetailPage.tsx`
 
-### `src/components/modals/CreateTravelModal.tsx`
-- Add `useEffect` to sync `step`, `travelType`, `title`, and `departureDate` when `defaultSubtype` or `defaultDate` change (or when `open` becomes true)
-- Change date input from `disabled={!!defaultDate}` to `readOnly={!!defaultDate}` with a muted background class
-
-### `src/components/modals/CreateShowModal.tsx`
-- Add `useEffect` to sync `date` state when `defaultDate` changes or modal opens
-- Change date input from `disabled={!!defaultDate}` to `readOnly={!!defaultDate}` with styling that shows the value clearly
-
-### `src/components/modals/CreateDayOffModal.tsx`
-- Add `useEffect` to sync `date` when `defaultDate` changes or modal opens
-- Same `readOnly` treatment for the date input
-
-### All three modals — date styling
-Instead of `disabled` (which grays out and can hide value), use `readOnly` + `className="bg-muted cursor-default"` so the date is visible but clearly non-editable.
-
-## Files
-
-| File | Change |
-|------|--------|
-| `src/components/modals/CreateTravelModal.tsx` | Add useEffect for prop sync, readOnly date |
-| `src/components/modals/CreateShowModal.tsx` | Add useEffect for date sync, readOnly date |
-| `src/components/modals/CreateDayOffModal.tsx` | Add useEffect for date sync, readOnly date |
-
+Technical details
+- Root cause: `InfoCard` only becomes clickable when `onClick` is provided; TravelPage never supplies it today.
+- This is a UI wiring fix, not a backend issue.
+- After this, users will be able to tap into travel from the Travel tab, and timeline-only items will also consistently open the detail/delete page.

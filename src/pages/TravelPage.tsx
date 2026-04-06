@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { InfoCard } from "@/components/shared/InfoCard";
 import { StatusChip } from "@/components/shared/StatusChip";

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,10 @@ export function CreateShowModal({ open, onOpenChange, defaultTourId, defaultDate
   const [city, setCity] = useState("");
   const [date, setDate] = useState(defaultDate || "");
   const [tourId, setTourId] = useState(defaultTourId || "");
+
+  useEffect(() => {
+    if (open && defaultDate) setDate(defaultDate);
+  }, [open, defaultDate]);
   const [capacity, setCapacity] = useState("");
   const createShow = useCreateShow();
   const { data: tours } = useTours();
@@ -64,7 +68,7 @@ export function CreateShowModal({ open, onOpenChange, defaultTourId, defaultDate
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1.5 block text-sm font-medium">Date</label>
-              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="h-11" disabled={!!defaultDate} />
+              <Input type="date" value={date} onChange={(e) => { if (!defaultDate) setDate(e.target.value); }} readOnly={!!defaultDate} className={`h-11 ${defaultDate ? "bg-muted cursor-default" : ""}`} />
             </div>
             <div>
               <label className="mb-1.5 block text-sm font-medium">Capacity</label>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,10 @@ export function CreateDayOffModal({ open, onOpenChange, tourId, defaultDate }: P
 
   const [date, setDate] = useState(defaultDate || "");
   const [notes, setNotes] = useState("");
+
+  useEffect(() => {
+    if (open && defaultDate) setDate(defaultDate);
+  }, [open, defaultDate]);
   const [saving, setSaving] = useState(false);
 
   const resetForm = () => {
@@ -69,7 +73,7 @@ export function CreateDayOffModal({ open, onOpenChange, tourId, defaultDate }: P
         <div className="space-y-4 mt-2">
           <div>
             <label className="mb-1.5 block text-sm font-medium">Date</label>
-            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} disabled={!!defaultDate} />
+            <Input type="date" value={date} onChange={(e) => { if (!defaultDate) setDate(e.target.value); }} readOnly={!!defaultDate} className={defaultDate ? "bg-muted cursor-default" : ""} />
           </div>
           <div>
             <label className="mb-1.5 block text-sm font-medium">Notes (optional)</label>

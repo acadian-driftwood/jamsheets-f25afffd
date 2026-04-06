@@ -101,8 +101,14 @@ function SortableItem({
               <GripVertical className="h-4 w-4 text-muted-foreground/40" />
             </button>
           )}
-          <Coffee className="h-3.5 w-3.5" />
-          <span>Day off</span>
+          <button
+            onClick={() => navigate(`/travel/${item.id}`)}
+            className="flex items-center gap-2 press-scale active:text-foreground transition-colors"
+          >
+            <Coffee className="h-3.5 w-3.5" />
+            <span>Day off</span>
+            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50" />
+          </button>
         </div>
       ) : (
         <div className={cn("flex items-center gap-0", isDragging && "shadow-lg rounded-xl")}>

@@ -1,54 +1,47 @@
 
 
-# Drag-to-Reorder Timeline Items Within a Day
+# Fix Quick-Add Flow, Add Travel Detail Page with Delete, Lock Dates
 
-## Overview
+## Three changes
 
-Add the ability for privileged users (owner/admin/tm) to reorder multiple items on the same day via drag-and-drop, with a six-dot grip handle indicating draggability.
+### 1. Skip redundant travel type picker from QuickAddSheet
 
-## Database Migration
+When the user taps "Flight", "Rental Car", or "Drive" from the tour timeline, the type is already known. Pass `defaultSubtype` to `CreateTravelModal` so it skips the type-selection step and goes straight to the form.
 
-Add a `sort_order` column to both tables that contribute items to the timeline:
+**Files:**
+- **`CreateTravelModal.tsx`** — accept optional `defaultSubtype` prop. When set, initialize `step="form"` and `travelType` to match. Hide the "Back" button (no type step to return to). On close, reset properly.
+- **`TourDetailPage.tsx`** — pass `travelSubtype` as `defaultSubtype` prop to `CreateTravelModal`.
 
-```sql
-ALTER TABLE public.shows ADD COLUMN sort_order integer NOT NULL DEFAULT 0;
-ALTER TABLE public.tour_timeline_items ADD COLUMN sort_order integer NOT NULL DEFAULT 0;
-```
+### 2. Travel detail page with delete at the bottom (like shows)
 
-No RLS changes needed — existing update policies already cover privileged roles.
+Create a new `TravelDetailPage` at `/travel/:id` that displays the travel item's details and includes a Danger Zone section at the bottom for privileged users to delete it — matching the pattern on `ShowDetailPage`.
 
-## Frontend Changes
+**New file: `src/pages/TravelDetailPage.tsx`**
+- Fetch the `tour_timeline_items` record by ID
+- Display all relevant fields (title, type, locations, dates/times, airline, confirmation, rental company, traveler, notes)
+- Danger Zone at the bottom with "Delete Travel Item" button (confirm dialog, then delete from `tour_timeline_items`, also delete any linked items, navigate back)
+- Edit button in header for privileged users (stretch — can skip for now and just do view + delete)
 
-### TourDetailPage.tsx
+**`App.tsx`** — add route `/travel/:id` pointing to `TravelDetailPage`
 
-- Install and use `@dnd-kit/core` + `@dnd-kit/sortable` for accessible drag-and-drop (lightweight, touch-friendly, React-native)
-- Within each day that has 2+ items, wrap the items list in a `SortableContext`
-- Each item card gets wrapped in a sortable wrapper
-- Show a 6-dot grip icon (`GripVertical` from lucide) on the left side of each item card — only visible to privileged users
-- On drag end: reorder the items array for that day, then persist the new `sort_order` values via batch updates to `shows` and/or `tour_timeline_items` as appropriate
-- Single-item days show no grip handle
+**`TourDetailPage.tsx`** — make travel/day-off cards tappable, navigating to `/travel/{item.id}`. Update both the `SortableItem` component and the non-sortable rendering to add `onClick={() => navigate(\`/travel/${item.id}\`)}` and a `ChevronRight` icon for non-show timeline items.
 
-### Sorting logic in merged items
+### 3. Lock the date field when `defaultDate` is provided
 
-- Update the `merged` memo to sort by `date` first, then `sort_order` ascending
-- When creating new items, assign `sort_order` = count of existing items on that date (append to end)
+When adding from the tour timeline, the date is already determined.
 
-### Files to modify
+- **`CreateShowModal.tsx`** — disable date input when `defaultDate` is set
+- **`CreateTravelModal.tsx`** — disable departure date input when `defaultDate` is set
+- **`CreateDayOffModal.tsx`** — disable date input when `defaultDate` is set
+
+## Files summary
 
 | File | Change |
 |------|--------|
-| **Migration** | Add `sort_order` to `shows` and `tour_timeline_items` |
-| `src/pages/TourDetailPage.tsx` | Add dnd-kit sortable within each day group, grip handle, persist reorder |
-| `src/components/modals/CreateShowModal.tsx` | Pass `sort_order` when inserting |
-| `src/components/modals/CreateTravelModal.tsx` | Pass `sort_order` when inserting |
-| `src/components/modals/CreateDayOffModal.tsx` | Pass `sort_order` when inserting |
-| `package.json` | Add `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities` |
-
-## UX Details
-
-- Grip handle: `GripVertical` icon (6 dots), muted color, left of the item icon
-- Only rendered for privileged users (`isPrivileged`)
-- Touch-friendly: dnd-kit supports touch sensors out of the box
-- Items with only one entry on a day: no grip shown
-- Visual feedback during drag: slight scale/shadow lift on the dragged card
+| `src/pages/TravelDetailPage.tsx` | New — detail view with Danger Zone delete |
+| `src/App.tsx` | Add `/travel/:id` route |
+| `src/pages/TourDetailPage.tsx` | Make travel cards tappable, pass `defaultSubtype` to CreateTravelModal |
+| `src/components/modals/CreateTravelModal.tsx` | Accept `defaultSubtype`, skip type step, lock date |
+| `src/components/modals/CreateShowModal.tsx` | Lock date when `defaultDate` set |
+| `src/components/modals/CreateDayOffModal.tsx` | Lock date when `defaultDate` set |
 

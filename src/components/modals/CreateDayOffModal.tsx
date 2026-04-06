@@ -69,7 +69,7 @@ export function CreateDayOffModal({ open, onOpenChange, tourId, defaultDate }: P
         <div className="space-y-4 mt-2">
           <div>
             <label className="mb-1.5 block text-sm font-medium">Date</label>
-            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} disabled={!!defaultDate} />
           </div>
           <div>
             <label className="mb-1.5 block text-sm font-medium">Notes (optional)</label>

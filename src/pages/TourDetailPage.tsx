@@ -112,11 +112,8 @@ function SortableItem({
             </button>
           )}
           <button
-            onClick={isShow ? () => navigate(`/shows/${item.showId}`) : undefined}
-            className={cn(
-              "w-full rounded-xl border bg-card p-3 text-left transition-all press-scale",
-              isShow && "active:bg-muted/40"
-            )}
+            onClick={isShow ? () => navigate(`/shows/${item.showId}`) : () => navigate(`/travel/${item.id}`)}
+            className="w-full rounded-xl border bg-card p-3 text-left transition-all press-scale active:bg-muted/40"
           >
             <div className="flex items-center gap-2.5">
               <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -132,7 +129,7 @@ function SortableItem({
                   <p className="text-[11px] text-muted-foreground mt-0.5">{item.timeStart}</p>
                 )}
               </div>
-              {isShow && <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/50" />}
+              <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/50" />
             </div>
           </button>
         </div>
@@ -480,11 +477,8 @@ export default function TourDetailPage() {
                               </div>
                             ) : (
                               <button
-                                onClick={isShow ? () => navigate(`/shows/${item.showId}`) : undefined}
-                                className={cn(
-                                  "w-full rounded-xl border bg-card p-3 text-left transition-all press-scale",
-                                  isShow && "active:bg-muted/40"
-                                )}
+                            onClick={isShow ? () => navigate(`/shows/${item.showId}`) : () => navigate(`/travel/${item.id}`)}
+                            className="w-full rounded-xl border bg-card p-3 text-left transition-all press-scale active:bg-muted/40"
                               >
                                 <div className="flex items-center gap-2.5">
                                   <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -500,7 +494,7 @@ export default function TourDetailPage() {
                                       <p className="text-[11px] text-muted-foreground mt-0.5">{item.timeStart}</p>
                                     )}
                                   </div>
-                                  {isShow && <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/50" />}
+                                  <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/50" />
                                 </div>
                               </button>
                             )}
@@ -542,7 +536,7 @@ export default function TourDetailPage() {
       )}
 
       <CreateShowModal open={showCreate} onOpenChange={setShowCreate} defaultTourId={id} defaultDate={selectedDate || undefined} />
-      {id && <CreateTravelModal open={showTravel} onOpenChange={setShowTravel} tourId={id} defaultDate={selectedDate || undefined} />}
+      {id && <CreateTravelModal open={showTravel} onOpenChange={setShowTravel} tourId={id} defaultDate={selectedDate || undefined} defaultSubtype={travelSubtype} />}
       {id && <CreateDayOffModal open={showDayOff} onOpenChange={setShowDayOff} tourId={id} defaultDate={selectedDate || undefined} />}
       {tour && <EditTourModal open={showEdit} onOpenChange={setShowEdit} tour={tour} />}
       <QuickAddSheet

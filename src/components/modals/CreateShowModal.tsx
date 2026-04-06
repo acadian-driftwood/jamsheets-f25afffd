@@ -64,7 +64,7 @@ export function CreateShowModal({ open, onOpenChange, defaultTourId, defaultDate
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1.5 block text-sm font-medium">Date</label>
-              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="h-11" />
+              <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="h-11" disabled={!!defaultDate} />
             </div>
             <div>
               <label className="mb-1.5 block text-sm font-medium">Capacity</label>

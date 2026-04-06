@@ -17,20 +17,27 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   tourId: string;
   defaultDate?: string;
+  defaultSubtype?: string;
 }
 
-export function CreateTravelModal({ open, onOpenChange, tourId, defaultDate }: Props) {
+export function CreateTravelModal({ open, onOpenChange, tourId, defaultDate, defaultSubtype }: Props) {
   const { currentOrg } = useOrg();
   const qc = useQueryClient();
   const orgId = currentOrg?.organization.id;
 
-  const [step, setStep] = useState<"type" | "form">("type");
-  const [travelType, setTravelType] = useState<TravelType>("driving");
+  const resolveType = (s?: string): TravelType => {
+    if (s === "flight") return "flight";
+    if (s === "rental") return "rental";
+    return "driving";
+  };
+  const [step, setStep] = useState<"type" | "form">(defaultSubtype ? "form" : "type");
+  const [travelType, setTravelType] = useState<TravelType>(defaultSubtype ? resolveType(defaultSubtype) : "driving");
   const [tripType, setTripType] = useState<"one_way" | "round_trip">("one_way");
   const [saving, setSaving] = useState(false);
 
   // Common fields
-  const [title, setTitle] = useState("");
+  const defaultTitle = defaultSubtype === "flight" ? "Flight" : defaultSubtype === "rental" ? "Rental Car" : defaultSubtype === "driving" ? "Drive" : "";
+  const [title, setTitle] = useState(defaultTitle);
   const [departureLocation, setDepartureLocation] = useState("");
   const [arrivalLocation, setArrivalLocation] = useState("");
   const [departureDate, setDepartureDate] = useState(defaultDate || "");
@@ -55,8 +62,8 @@ export function CreateTravelModal({ open, onOpenChange, tourId, defaultDate }: P
   const [rentalConfirmation, setRentalConfirmation] = useState("");
 
   const resetForm = () => {
-    setStep("type");
-    setTravelType("driving");
+    setStep(defaultSubtype ? "form" : "type");
+    setTravelType(defaultSubtype ? resolveType(defaultSubtype) : "driving");
     setTripType("one_way");
     setTitle(""); setDepartureLocation(""); setArrivalLocation("");
     setDepartureDate(""); setDepartureTime(""); setArrivalDate(""); setArrivalTime("");
@@ -281,7 +288,7 @@ export function CreateTravelModal({ open, onOpenChange, tourId, defaultDate }: P
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="mb-1.5 block text-sm font-medium">{travelType === "rental" ? "Pickup Date" : "Departure Date"}</label>
-                <Input type="date" value={departureDate} onChange={e => setDepartureDate(e.target.value)} />
+                <Input type="date" value={departureDate} onChange={e => setDepartureDate(e.target.value)} disabled={!!defaultDate} />
               </div>
               <div>
                 <label className="mb-1.5 block text-sm font-medium">Time</label>
@@ -336,7 +343,7 @@ export function CreateTravelModal({ open, onOpenChange, tourId, defaultDate }: P
             </div>
 
             <div className="flex gap-2 pt-2">
-              <Button variant="outline" onClick={() => setStep("type")} className="flex-1">Back</Button>
+              {!defaultSubtype && <Button variant="outline" onClick={() => setStep("type")} className="flex-1">Back</Button>}
               <Button onClick={handleSubmit} disabled={saving || !departureDate} className="flex-1">
                 {saving ? "Saving…" : "Add Travel"}
               </Button>

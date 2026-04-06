@@ -28,6 +28,7 @@ const typeIcon: Record<string, typeof Plane> = {
 
 export default function TravelPage() {
   const { currentOrg } = useOrg();
+  const navigate = useNavigate();
   const orgId = currentOrg?.organization.id;
   const today = new Date().toISOString().split("T")[0];
 

@@ -506,6 +506,7 @@ export type Database = {
           id: string
           notes: string | null
           organization_id: string
+          sort_order: number
           tour_id: string | null
           updated_at: string
           venue: string
@@ -522,6 +523,7 @@ export type Database = {
           id?: string
           notes?: string | null
           organization_id: string
+          sort_order?: number
           tour_id?: string | null
           updated_at?: string
           venue: string
@@ -538,6 +540,7 @@ export type Database = {
           id?: string
           notes?: string | null
           organization_id?: string
+          sort_order?: number
           tour_id?: string | null
           updated_at?: string
           venue?: string
@@ -687,6 +690,7 @@ export type Database = {
           notes: string | null
           organization_id: string
           rental_company: string | null
+          sort_order: number
           subtitle: string | null
           time_end: string | null
           time_start: string | null
@@ -709,6 +713,7 @@ export type Database = {
           notes?: string | null
           organization_id: string
           rental_company?: string | null
+          sort_order?: number
           subtitle?: string | null
           time_end?: string | null
           time_start?: string | null
@@ -731,6 +736,7 @@ export type Database = {
           notes?: string | null
           organization_id?: string
           rental_company?: string | null
+          sort_order?: number
           subtitle?: string | null
           time_end?: string | null
           time_start?: string | null

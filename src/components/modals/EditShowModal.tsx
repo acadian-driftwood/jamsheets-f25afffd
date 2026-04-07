@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useUpdateShow, useTours } from "@/hooks/useData";
 import { toast } from "sonner";
+import { TIMEZONE_OPTIONS, getLocalTimezone } from "@/lib/timezones";
 import type { Database } from "@/integrations/supabase/types";
 
 type Show = Database["public"]["Tables"]["shows"]["Row"];
@@ -24,6 +25,7 @@ export function EditShowModal({ open, onOpenChange, show }: EditShowModalProps) 
   const [notes, setNotes] = useState(show.notes || "");
   const [gearNotes, setGearNotes] = useState(show.gear_notes || "");
   const [tourId, setTourId] = useState(show.tour_id || "");
+  const [timezone, setTimezone] = useState((show as any).timezone || getLocalTimezone());
   const updateShow = useUpdateShow();
   const { data: tours } = useTours();
 
@@ -36,6 +38,7 @@ export function EditShowModal({ open, onOpenChange, show }: EditShowModalProps) 
     setNotes(show.notes || "");
     setGearNotes(show.gear_notes || "");
     setTourId(show.tour_id || "");
+    setTimezone((show as any).timezone || getLocalTimezone());
   }, [show]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -53,7 +56,8 @@ export function EditShowModal({ open, onOpenChange, show }: EditShowModalProps) 
         capacity: capacity ? parseInt(capacity) : null,
         notes: notes.trim() || null,
         gear_notes: gearNotes.trim() || null,
-      });
+        timezone,
+      } as any);
       toast.success("Show updated");
       onOpenChange(false);
     } catch (err) {
@@ -89,6 +93,18 @@ export function EditShowModal({ open, onOpenChange, show }: EditShowModalProps) 
               <label className="mb-1.5 block text-sm font-medium">Capacity</label>
               <Input type="number" value={capacity} onChange={(e) => setCapacity(e.target.value)} className="h-11" />
             </div>
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-medium">Time Zone</label>
+            <select
+              value={timezone}
+              onChange={(e) => setTimezone(e.target.value)}
+              className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
+              {TIMEZONE_OPTIONS.map((tz) => (
+                <option key={tz.value} value={tz.value}>{tz.label}</option>
+              ))}
+            </select>
           </div>
           {tours && tours.length > 0 && (
             <div>

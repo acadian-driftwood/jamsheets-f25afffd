@@ -1,29 +1,27 @@
 
 
-# Fix Timezone Display in Show Schedule
+# Add Inline Editing for Schedule Items
 
 ## Problem
-
-1. Shows created before the timezone feature have `null` timezone, so the banner says "All times in local time" instead of a real timezone.
-2. Each schedule item redundantly shows the timezone abbreviation (e.g. "10:00 PM ET") even though the banner already states it — and the `w-[56px]` column is too narrow to fit that, causing layout issues.
+Schedule items display their time and title but offer no way to edit them — only delete. The `useUpdateScheduleItem` hook already exists in `useData.ts` but is never used.
 
 ## Fix
 
-### `src/pages/ShowDetailPage.tsx`
+### `src/pages/ShowDetailPage.tsx` — ScheduleSection
 
-**Banner**: Keep as-is — it already shows the correct timezone when one is set. For shows without a timezone, fall back to the creator's browser timezone label (or keep "local time").
+Make each schedule row tappable to enter an inline edit mode (similar to the existing "adding" flow):
 
-**Schedule item times**: Remove the inline timezone abbreviation from each row. The banner covers it. Widen the time column from `w-[56px]` to `w-[72px]` so "10:00 PM" fits comfortably.
+- **Tap a row** to select it for editing. The row transforms into editable inputs: a `time` input (pre-filled with the current `starts_at`) and a text input (pre-filled with the current `title`).
+- Show **Save** (check) and **Cancel** (X) buttons, replacing the delete button while editing.
+- On save, call `useUpdateScheduleItem` with the updated `title`, `starts_at`, and `show_id`.
+- Only one row can be in edit mode at a time.
 
-**Show header subtitle**: Already shows timezone abbreviation from previous work — no change needed.
-
-### Existing shows without timezone
-
-For shows created before the timezone column existed, the `null` value means "local time." This is correct — the user can edit the show to set a timezone. No backfill needed.
+### Import change
+Add `useUpdateScheduleItem` to the existing import from `useData`.
 
 ## Files
 
 | File | Change |
 |------|--------|
-| `src/pages/ShowDetailPage.tsx` | Remove per-item timezone abbreviation, widen time column |
+| `src/pages/ShowDetailPage.tsx` | Add edit state and inline editing UI to ScheduleSection, import `useUpdateScheduleItem` |
 

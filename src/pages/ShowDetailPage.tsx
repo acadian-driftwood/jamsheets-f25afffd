@@ -213,7 +213,7 @@ function ScheduleSection({ showId, timezone }: { showId: string; timezone?: stri
             <div key={item.id} className="flex items-center justify-between px-4 py-3 border-b last:border-b-0">
               <div className="flex items-center gap-3">
                 <span className="w-[56px] text-xs font-medium tabular-nums text-muted-foreground">
-                  {item.starts_at ? (() => { try { return format(parseISO(item.starts_at), "h:mm a"); } catch { return item.starts_at; } })() : "—"}
+                  {item.starts_at ? `${formatTimeInZone(item.starts_at, timezone || "")}${timezone ? ` ${getTimezoneAbbr(timezone)}` : ""}` : "—"}
                 </span>
                 <span className="text-sm">{item.title}</span>
               </div>

@@ -25,6 +25,7 @@ import { toast } from "sonner";
 import { EditShowModal } from "@/components/modals/EditShowModal";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { getTimezoneAbbr, formatTimeInZone } from "@/lib/timezones";
 import { useSubscription } from "@/hooks/useSubscription";
 import { UpgradePrompt } from "@/components/shared/UpgradePrompt";
 import { ShowSwipeNav } from "@/components/tour/ShowSwipeNav";
@@ -182,7 +183,7 @@ function HotelSection({ showId }: { showId: string }) {
 }
 
 // ─── Schedule Section ────────────────────────────────────
-function ScheduleSection({ showId }: { showId: string }) {
+function ScheduleSection({ showId, timezone }: { showId: string; timezone?: string }) {
   const { data: items } = useShowSchedule(showId);
   const create = useCreateScheduleItem();
   const remove = useDeleteScheduleItem();
@@ -203,6 +204,11 @@ function ScheduleSection({ showId }: { showId: string }) {
     <div>
       {items && items.length > 0 && (
         <div className="rounded-2xl border bg-card shadow-sm mb-3 overflow-hidden">
+          {timezone && (
+            <div className="px-4 py-2 border-b bg-muted/30">
+              <span className="text-[11px] text-muted-foreground font-medium">All times in {getTimezoneAbbr(timezone)}</span>
+            </div>
+          )}
           {items.map(item => (
             <div key={item.id} className="flex items-center justify-between px-4 py-3 border-b last:border-b-0">
               <div className="flex items-center gap-3">
@@ -518,7 +524,7 @@ export default function ShowDetailPage() {
       {/* Sections */}
       <div className="mt-5">
         <Section title="Schedule" icon={Clock} defaultOpen count={schedule?.length}>
-          <ScheduleSection showId={id!} />
+          <ScheduleSection showId={id!} timezone={(show as any).timezone} />
         </Section>
 
         <PaidSection title="Hotel" icon={Hotel}>

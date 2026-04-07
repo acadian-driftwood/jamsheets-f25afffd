@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
-import { Plane, Car, MapPin, Coffee, Clock, Hash, User, FileText } from "lucide-react";
+import { Plane, Car, MapPin, Coffee, Clock, Hash, User, FileText, Globe } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/contexts/OrgContext";
 import { format, parseISO } from "date-fns";
 import { toast } from "sonner";
+import { getTimezoneAbbr, formatTimeInZone } from "@/lib/timezones";
 
 function InfoRow({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
   return (
@@ -115,10 +116,10 @@ export default function TravelDetailPage() {
             <InfoRow icon={MapPin} label="To" value={item.arrival_location} />
           )}
           {item.time_start && (
-            <InfoRow icon={Clock} label="Departure Time" value={item.time_start} />
+            <InfoRow icon={Clock} label="Departure Time" value={`${formatTimeInZone(item.time_start, (item as any).departure_timezone || "")}${(item as any).departure_timezone ? ` ${getTimezoneAbbr((item as any).departure_timezone)}` : ""}`} />
           )}
           {item.time_end && (
-            <InfoRow icon={Clock} label="Arrival Time" value={item.time_end} />
+            <InfoRow icon={Clock} label="Arrival Time" value={`${formatTimeInZone(item.time_end, (item as any).arrival_timezone || "")}${(item as any).arrival_timezone ? ` ${getTimezoneAbbr((item as any).arrival_timezone)}` : ""}`} />
           )}
           {item.airline && (
             <InfoRow icon={Plane} label="Airline" value={item.airline} />

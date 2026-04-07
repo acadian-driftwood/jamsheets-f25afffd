@@ -9,6 +9,7 @@ import { useOrg } from "@/contexts/OrgContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { TIMEZONE_OPTIONS, getLocalTimezone } from "@/lib/timezones";
 
 type TravelType = "driving" | "flight" | "rental";
 
@@ -59,8 +60,10 @@ export function CreateTravelModal({ open, onOpenChange, tourId, defaultDate, def
     }
   }, [open, defaultSubtype, defaultDate]);
   const [departureTime, setDepartureTime] = useState("");
+  const [departureTimezone, setDepartureTimezone] = useState(getLocalTimezone());
   const [arrivalDate, setArrivalDate] = useState("");
   const [arrivalTime, setArrivalTime] = useState("");
+  const [arrivalTimezone, setArrivalTimezone] = useState(getLocalTimezone());
   const [notes, setNotes] = useState("");
   const [travelerName, setTravelerName] = useState("");
 
@@ -83,7 +86,8 @@ export function CreateTravelModal({ open, onOpenChange, tourId, defaultDate, def
     setTravelType(defaultSubtype ? resolveType(defaultSubtype) : "driving");
     setTripType("one_way");
     setTitle(""); setDepartureLocation(""); setArrivalLocation("");
-    setDepartureDate(""); setDepartureTime(""); setArrivalDate(""); setArrivalTime("");
+    setDepartureDate(""); setDepartureTime(""); setDepartureTimezone(getLocalTimezone());
+    setArrivalDate(""); setArrivalTime(""); setArrivalTimezone(getLocalTimezone());
     setNotes(""); setTravelerName(""); setAirline(""); setConfirmationNumber("");
     setReturnDepartureDate(""); setReturnDepartureTime(""); setReturnArrivalDate(""); setReturnArrivalTime("");
     setRentalCompany(""); setRentalConfirmation("");
@@ -122,6 +126,8 @@ export function CreateTravelModal({ open, onOpenChange, tourId, defaultDate, def
           arrival_location: arrivalLocation || null,
           traveler_name: travelerName || null,
           travel_subtype: "one_way",
+          departure_timezone: departureTimezone,
+          arrival_timezone: arrivalTimezone,
         } as any).throwOnError();
       } else if (travelType === "flight") {
         const outbound = await supabase.from("tour_timeline_items").insert({
@@ -140,6 +146,8 @@ export function CreateTravelModal({ open, onOpenChange, tourId, defaultDate, def
           confirmation_number: confirmationNumber || null,
           traveler_name: travelerName || null,
           travel_subtype: tripType,
+          departure_timezone: departureTimezone,
+          arrival_timezone: arrivalTimezone,
         } as any).select().single().throwOnError();
 
         if (tripType === "round_trip" && returnDepartureDate) {
@@ -160,6 +168,8 @@ export function CreateTravelModal({ open, onOpenChange, tourId, defaultDate, def
             traveler_name: travelerName || null,
             travel_subtype: "round_trip",
             linked_item_id: outbound.data?.id || null,
+            departure_timezone: arrivalTimezone,
+            arrival_timezone: departureTimezone,
           } as any).throwOnError();
         }
       } else {
@@ -180,6 +190,8 @@ export function CreateTravelModal({ open, onOpenChange, tourId, defaultDate, def
           confirmation_number: rentalConfirmation || null,
           traveler_name: travelerName || null,
           travel_subtype: tripType,
+          departure_timezone: departureTimezone,
+          arrival_timezone: arrivalTimezone,
         } as any).select().single().throwOnError();
 
         if (arrivalDate) {
@@ -201,6 +213,8 @@ export function CreateTravelModal({ open, onOpenChange, tourId, defaultDate, def
             traveler_name: travelerName || null,
             travel_subtype: tripType,
             linked_item_id: pickup.data?.id || null,
+            departure_timezone: tripType === "round_trip" ? arrivalTimezone : departureTimezone,
+            arrival_timezone: tripType === "round_trip" ? departureTimezone : arrivalTimezone,
           } as any).throwOnError();
         }
       }
@@ -313,6 +327,13 @@ export function CreateTravelModal({ open, onOpenChange, tourId, defaultDate, def
               </div>
             </div>
 
+            <div>
+              <label className="mb-1.5 block text-sm font-medium">{travelType === "rental" ? "Pickup" : "Departure"} Time Zone</label>
+              <select value={departureTimezone} onChange={e => setDepartureTimezone(e.target.value)} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                {TIMEZONE_OPTIONS.map(tz => <option key={tz.value} value={tz.value}>{tz.label}</option>)}
+              </select>
+            </div>
+
             {(travelType === "driving" || tripType === "one_way") && (
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -323,6 +344,15 @@ export function CreateTravelModal({ open, onOpenChange, tourId, defaultDate, def
                   <label className="mb-1.5 block text-sm font-medium">Time</label>
                   <Input type="time" value={arrivalTime} onChange={e => setArrivalTime(e.target.value)} />
                 </div>
+              </div>
+            )}
+
+            {(travelType === "driving" || tripType === "one_way") && (
+              <div>
+                <label className="mb-1.5 block text-sm font-medium">{travelType === "rental" ? "Dropoff" : "Arrival"} Time Zone</label>
+                <select value={arrivalTimezone} onChange={e => setArrivalTimezone(e.target.value)} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                  {TIMEZONE_OPTIONS.map(tz => <option key={tz.value} value={tz.value}>{tz.label}</option>)}
+                </select>
               </div>
             )}
 

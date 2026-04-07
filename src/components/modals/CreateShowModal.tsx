@@ -2,10 +2,10 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { useCreateShow } from "@/hooks/useData";
 import { useTours } from "@/hooks/useData";
 import { toast } from "sonner";
+import { TIMEZONE_OPTIONS, getLocalTimezone } from "@/lib/timezones";
 
 interface CreateShowModalProps {
   open: boolean;
@@ -19,6 +19,7 @@ export function CreateShowModal({ open, onOpenChange, defaultTourId, defaultDate
   const [city, setCity] = useState("");
   const [date, setDate] = useState(defaultDate || "");
   const [tourId, setTourId] = useState(defaultTourId || "");
+  const [timezone, setTimezone] = useState(getLocalTimezone());
 
   useEffect(() => {
     if (open && defaultDate) setDate(defaultDate);
@@ -38,12 +39,14 @@ export function CreateShowModal({ open, onOpenChange, defaultTourId, defaultDate
         date,
         tour_id: tourId || null,
         capacity: capacity ? parseInt(capacity) : null,
+        timezone,
       });
       toast.success("Show created");
       setVenue("");
       setCity("");
       setDate("");
       setCapacity("");
+      setTimezone(getLocalTimezone());
       onOpenChange(false);
     } catch (err) {
       toast.error("Failed to create show");
@@ -74,6 +77,18 @@ export function CreateShowModal({ open, onOpenChange, defaultTourId, defaultDate
               <label className="mb-1.5 block text-sm font-medium">Capacity</label>
               <Input type="number" value={capacity} onChange={(e) => setCapacity(e.target.value)} placeholder="1000" className="h-11" />
             </div>
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-medium">Time Zone</label>
+            <select
+              value={timezone}
+              onChange={(e) => setTimezone(e.target.value)}
+              className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
+              {TIMEZONE_OPTIONS.map((tz) => (
+                <option key={tz.value} value={tz.value}>{tz.label}</option>
+              ))}
+            </select>
           </div>
           {tours && tours.length > 0 && (
             <div>

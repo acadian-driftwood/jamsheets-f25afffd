@@ -126,6 +126,8 @@ export function CreateTravelModal({ open, onOpenChange, tourId, defaultDate, def
           arrival_location: arrivalLocation || null,
           traveler_name: travelerName || null,
           travel_subtype: "one_way",
+          departure_timezone: departureTimezone,
+          arrival_timezone: arrivalTimezone,
         } as any).throwOnError();
       } else if (travelType === "flight") {
         const outbound = await supabase.from("tour_timeline_items").insert({

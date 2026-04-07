@@ -9,6 +9,7 @@ import { useOrg } from "@/contexts/OrgContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { TIMEZONE_OPTIONS, getLocalTimezone } from "@/lib/timezones";
 
 type TravelType = "driving" | "flight" | "rental";
 
@@ -59,8 +60,10 @@ export function CreateTravelModal({ open, onOpenChange, tourId, defaultDate, def
     }
   }, [open, defaultSubtype, defaultDate]);
   const [departureTime, setDepartureTime] = useState("");
+  const [departureTimezone, setDepartureTimezone] = useState(getLocalTimezone());
   const [arrivalDate, setArrivalDate] = useState("");
   const [arrivalTime, setArrivalTime] = useState("");
+  const [arrivalTimezone, setArrivalTimezone] = useState(getLocalTimezone());
   const [notes, setNotes] = useState("");
   const [travelerName, setTravelerName] = useState("");
 

@@ -327,6 +327,13 @@ export function CreateTravelModal({ open, onOpenChange, tourId, defaultDate, def
               </div>
             </div>
 
+            <div>
+              <label className="mb-1.5 block text-sm font-medium">{travelType === "rental" ? "Pickup" : "Departure"} Time Zone</label>
+              <select value={departureTimezone} onChange={e => setDepartureTimezone(e.target.value)} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                {TIMEZONE_OPTIONS.map(tz => <option key={tz.value} value={tz.value}>{tz.label}</option>)}
+              </select>
+            </div>
+
             {(travelType === "driving" || tripType === "one_way") && (
               <div className="grid grid-cols-2 gap-3">
                 <div>

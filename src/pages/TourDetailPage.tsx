@@ -17,6 +17,7 @@ import { useOrg } from "@/contexts/OrgContext";
 import { format, parseISO, eachDayOfInterval } from "date-fns";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { formatTimeInZone, getTimezoneAbbr } from "@/lib/timezones";
 import {
   DndContext,
   closestCenter,
@@ -41,6 +42,7 @@ type MergedItem = {
   title: string;
   subtitle?: string;
   timeStart?: string;
+  departureTimezone?: string;
   showId?: string;
   sortOrder: number;
   source: "show" | "timeline";
@@ -132,7 +134,10 @@ function SortableItem({
                   <p className="text-xs text-muted-foreground truncate mt-0.5">{item.subtitle}</p>
                 )}
                 {item.timeStart && (
-                  <p className="text-[11px] text-muted-foreground mt-0.5">{item.timeStart}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    {formatTimeInZone(item.timeStart, item.departureTimezone || "")}
+                    {item.departureTimezone && ` ${getTimezoneAbbr(item.departureTimezone)}`}
+                  </p>
                 )}
               </div>
               <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/50" />
@@ -217,6 +222,7 @@ export default function TourDetailPage() {
         title: t.title,
         subtitle: t.subtitle || undefined,
         timeStart: t.time_start || undefined,
+        departureTimezone: t.departure_timezone || undefined,
         sortOrder: (t as any).sort_order ?? 0,
         source: "timeline",
       });
@@ -501,7 +507,10 @@ export default function TourDetailPage() {
                                       <p className="text-xs text-muted-foreground truncate mt-0.5">{item.subtitle}</p>
                                     )}
                                     {item.timeStart && (
-                                      <p className="text-[11px] text-muted-foreground mt-0.5">{item.timeStart}</p>
+                                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                                        {formatTimeInZone(item.timeStart, item.departureTimezone || "")}
+                                        {item.departureTimezone && ` ${getTimezoneAbbr(item.departureTimezone)}`}
+                                      </p>
                                     )}
                                   </div>
                                   <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/50" />

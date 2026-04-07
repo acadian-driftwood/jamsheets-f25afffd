@@ -9,6 +9,7 @@ import { useOrg } from "@/contexts/OrgContext";
 import { format, parseISO } from "date-fns";
 import { toast } from "sonner";
 import { getTimezoneAbbr, formatTimeInZone } from "@/lib/timezones";
+import { EditTravelModal } from "@/components/modals/EditTravelModal";
 
 function InfoRow({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
   return (
@@ -28,6 +29,7 @@ export default function TravelDetailPage() {
   const { currentOrg } = useOrg();
   const qc = useQueryClient();
   const [deleting, setDeleting] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
 
   const isPrivileged = currentOrg && ["owner", "admin", "tm"].includes(currentOrg.role);
 
@@ -139,6 +141,20 @@ export default function TravelDetailPage() {
         </div>
       </div>
 
+      {/* Edit */}
+      {isPrivileged && (
+        <div className="mt-6">
+          <Button
+            size="sm"
+            variant="outline"
+            className="rounded-xl text-xs w-full"
+            onClick={() => setShowEdit(true)}
+          >
+            Edit
+          </Button>
+        </div>
+      )}
+
       {/* Danger Zone */}
       {isPrivileged && (
         <section className="mt-10 rounded-2xl border border-destructive/20 p-4">
@@ -156,6 +172,13 @@ export default function TravelDetailPage() {
             {deleting ? "Deleting…" : "Delete"}
           </Button>
         </section>
+      )}
+      {item && (
+        <EditTravelModal
+          open={showEdit}
+          onOpenChange={setShowEdit}
+          item={item as any}
+        />
       )}
     </div>
   );

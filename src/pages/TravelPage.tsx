@@ -6,6 +6,7 @@ import { StatusChip } from "@/components/shared/StatusChip";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Button } from "@/components/ui/button";
 import { Plane, Clock, Car, MapPin, Plus } from "lucide-react";
+import { formatTimeInZone, getTimezoneAbbr } from "@/lib/timezones";
 import { useOrg } from "@/contexts/OrgContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -138,7 +139,14 @@ export default function TravelPage() {
                         {item.time_start && (
                           <span className="flex items-center gap-1">
                             <Clock className="h-3 w-3" />
-                            {item.time_start}
+                            {formatTimeInZone(item.time_start, item.departure_timezone || "")}
+                            {item.departure_timezone && ` ${getTimezoneAbbr(item.departure_timezone)}`}
+                          </span>
+                        )}
+                        {item.time_end && (
+                          <span className="flex items-center gap-1">
+                            → {formatTimeInZone(item.time_end, item.arrival_timezone || "")}
+                            {item.arrival_timezone && ` ${getTimezoneAbbr(item.arrival_timezone)}`}
                           </span>
                         )}
                         {item.confirmation_number && (

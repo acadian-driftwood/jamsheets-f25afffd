@@ -354,6 +354,7 @@ export function CreateTravelModal({ open, onOpenChange, tourId, defaultDate, def
                   {TIMEZONE_OPTIONS.map(tz => <option key={tz.value} value={tz.value}>{tz.label}</option>)}
                 </select>
               </div>
+            )}
 
             {showRoundTrip && tripType === "round_trip" && (
               <>

@@ -507,6 +507,7 @@ export type Database = {
           notes: string | null
           organization_id: string
           sort_order: number
+          timezone: string | null
           tour_id: string | null
           updated_at: string
           venue: string
@@ -524,6 +525,7 @@ export type Database = {
           notes?: string | null
           organization_id: string
           sort_order?: number
+          timezone?: string | null
           tour_id?: string | null
           updated_at?: string
           venue: string
@@ -541,6 +543,7 @@ export type Database = {
           notes?: string | null
           organization_id?: string
           sort_order?: number
+          timezone?: string | null
           tour_id?: string | null
           updated_at?: string
           venue?: string
@@ -681,10 +684,12 @@ export type Database = {
         Row: {
           airline: string | null
           arrival_location: string | null
+          arrival_timezone: string | null
           confirmation_number: string | null
           created_at: string
           date: string
           departure_location: string | null
+          departure_timezone: string | null
           id: string
           linked_item_id: string | null
           notes: string | null
@@ -704,10 +709,12 @@ export type Database = {
         Insert: {
           airline?: string | null
           arrival_location?: string | null
+          arrival_timezone?: string | null
           confirmation_number?: string | null
           created_at?: string
           date: string
           departure_location?: string | null
+          departure_timezone?: string | null
           id?: string
           linked_item_id?: string | null
           notes?: string | null
@@ -727,10 +734,12 @@ export type Database = {
         Update: {
           airline?: string | null
           arrival_location?: string | null
+          arrival_timezone?: string | null
           confirmation_number?: string | null
           created_at?: string
           date?: string
           departure_location?: string | null
+          departure_timezone?: string | null
           id?: string
           linked_item_id?: string | null
           notes?: string | null

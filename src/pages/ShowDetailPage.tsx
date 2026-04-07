@@ -204,16 +204,14 @@ function ScheduleSection({ showId, timezone }: { showId: string; timezone?: stri
     <div>
       {items && items.length > 0 && (
         <div className="rounded-2xl border bg-card shadow-sm mb-3 overflow-hidden">
-          {timezone && (
-            <div className="px-4 py-2 border-b bg-muted/30">
-              <span className="text-[11px] text-muted-foreground font-medium">All times in {getTimezoneAbbr(timezone)}</span>
-            </div>
-          )}
+          <div className="px-4 py-2 border-b bg-muted/30">
+            <span className="text-[11px] text-muted-foreground font-medium">All times in {timezone ? getTimezoneAbbr(timezone) : "local time"}</span>
+          </div>
           {items.map(item => (
             <div key={item.id} className="flex items-center justify-between px-4 py-3 border-b last:border-b-0">
               <div className="flex items-center gap-3">
                 <span className="w-[56px] text-xs font-medium tabular-nums text-muted-foreground">
-                  {item.starts_at ? (() => { try { return format(parseISO(item.starts_at), "h:mm a"); } catch { return item.starts_at; } })() : "—"}
+                  {item.starts_at ? `${formatTimeInZone(item.starts_at, timezone || "")}${timezone ? ` ${getTimezoneAbbr(timezone)}` : ""}` : "—"}
                 </span>
                 <span className="text-sm">{item.title}</span>
               </div>
@@ -492,7 +490,7 @@ export default function ShowDetailPage() {
     <div className="page-container animate-fade-in">
       <PageHeader
         title={show.venue}
-        subtitle={[show.city, format(showDate, "MMM d, yyyy"), show.capacity ? `${show.capacity.toLocaleString()} cap` : null].filter(Boolean).join(" · ")}
+        subtitle={[show.city, format(showDate, "MMM d, yyyy"), (show as any).timezone ? getTimezoneAbbr((show as any).timezone) : null, show.capacity ? `${show.capacity.toLocaleString()} cap` : null].filter(Boolean).join(" · ")}
         back
         sticky
         action={

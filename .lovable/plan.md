@@ -1,37 +1,29 @@
 
 
-# Show Timezone Display and Schedule Time Formatting
+# Fix Timezone Display in Show Schedule
 
-## Problems
+## Problem
 
-1. **Timezone not showing on schedule**: The banner "All times in ..." only renders when the show has a `timezone` value. Shows created before the timezone feature was added have `null` in that column, so no banner appears.
-
-2. **Schedule times not formatted with timezone**: Line 216 tries `parseISO(item.starts_at)` on a plain time string like `"22:00"`, which fails. The catch fallback just shows the raw string `"22:00"` instead of a nicely formatted `"10:00 PM ET"`.
-
-3. **No timezone displayed inline with times**: Even when the timezone is set, individual schedule item times don't show the timezone abbreviation.
+1. Shows created before the timezone feature have `null` timezone, so the banner says "All times in local time" instead of a real timezone.
+2. Each schedule item redundantly shows the timezone abbreviation (e.g. "10:00 PM ET") even though the banner already states it — and the `w-[56px]` column is too narrow to fit that, causing layout issues.
 
 ## Fix
 
-### `src/pages/ShowDetailPage.tsx` — ScheduleSection
+### `src/pages/ShowDetailPage.tsx`
 
-- Replace the time formatting logic (line 216) to use `formatTimeInZone` from `timezones.ts` instead of `parseISO`. This turns `"22:00"` into `"10:00 PM"`.
-- Append the timezone abbreviation inline when the show has a timezone (e.g. `"10:00 PM ET"`).
-- Keep the banner as-is for context, but also make it show a fallback like "Local time" when no timezone is stored.
+**Banner**: Keep as-is — it already shows the correct timezone when one is set. For shows without a timezone, fall back to the creator's browser timezone label (or keep "local time").
 
-### `src/pages/ShowDetailPage.tsx` — Show header area
+**Schedule item times**: Remove the inline timezone abbreviation from each row. The banner covers it. Widen the time column from `w-[56px]` to `w-[72px]` so "10:00 PM" fits comfortably.
 
-- Display the show's timezone abbreviation somewhere visible near the date/venue info so users always know which timezone applies. A small chip or label like `"ET"` next to the date.
+**Show header subtitle**: Already shows timezone abbreviation from previous work — no change needed.
 
-### No other file changes needed
+### Existing shows without timezone
 
-- The `CreateShowModal` already has a timezone picker.
-- The `EditShowModal` already has a timezone picker.
-- The `useCreateShow` mutation already passes `timezone`.
-- The database column already exists.
+For shows created before the timezone column existed, the `null` value means "local time." This is correct — the user can edit the show to set a timezone. No backfill needed.
 
 ## Files
 
 | File | Change |
 |------|--------|
-| `src/pages/ShowDetailPage.tsx` | Fix schedule time formatting to use `formatTimeInZone`, show timezone abbreviation inline with times, show timezone label in header |
+| `src/pages/ShowDetailPage.tsx` | Remove per-item timezone abbreviation, widen time column |
 

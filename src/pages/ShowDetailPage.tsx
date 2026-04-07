@@ -182,7 +182,7 @@ function HotelSection({ showId }: { showId: string }) {
 }
 
 // ─── Schedule Section ────────────────────────────────────
-function ScheduleSection({ showId }: { showId: string }) {
+function ScheduleSection({ showId, timezone }: { showId: string; timezone?: string }) {
   const { data: items } = useShowSchedule(showId);
   const create = useCreateScheduleItem();
   const remove = useDeleteScheduleItem();

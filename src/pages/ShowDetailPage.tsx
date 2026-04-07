@@ -11,7 +11,7 @@ import {
 import { useParams, useNavigate } from "react-router-dom";
 import {
   useShow, useUpdateShow,
-  useShowSchedule, useCreateScheduleItem, useDeleteScheduleItem,
+  useShowSchedule, useCreateScheduleItem, useUpdateScheduleItem, useDeleteScheduleItem,
   useShowHotel, useUpsertHotel, useDeleteHotel,
   useShowContacts, useCreateContact, useDeleteContact,
   useShowGuestList, useRequestGuest, useUpdateGuestStatus, useDeleteGuest,
@@ -186,10 +186,14 @@ function HotelSection({ showId }: { showId: string }) {
 function ScheduleSection({ showId, timezone }: { showId: string; timezone?: string }) {
   const { data: items } = useShowSchedule(showId);
   const create = useCreateScheduleItem();
+  const update = useUpdateScheduleItem();
   const remove = useDeleteScheduleItem();
   const [adding, setAdding] = useState(false);
   const [title, setTitle] = useState("");
   const [time, setTime] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editTime, setEditTime] = useState("");
 
   const handleAdd = async () => {
     if (!title.trim()) return;
@@ -200,6 +204,30 @@ function ScheduleSection({ showId, timezone }: { showId: string; timezone?: stri
     } catch { toast.error("Failed to add item"); }
   };
 
+  const startEdit = (item: { id: string; title: string; starts_at: string | null }) => {
+    setEditingId(item.id);
+    setEditTitle(item.title);
+    // Convert stored time to HH:mm for the input
+    if (item.starts_at) {
+      // starts_at might be "HH:mm" or "HH:mm:ss"
+      const parts = item.starts_at.split(":");
+      setEditTime(parts.length >= 2 ? `${parts[0]}:${parts[1]}` : item.starts_at);
+    } else {
+      setEditTime("");
+    }
+  };
+
+  const handleSave = async () => {
+    if (!editingId || !editTitle.trim()) return;
+    try {
+      await update.mutateAsync({ id: editingId, show_id: showId, title: editTitle.trim(), starts_at: editTime || null });
+      setEditingId(null);
+      toast.success("Updated");
+    } catch { toast.error("Failed to update item"); }
+  };
+
+  const cancelEdit = () => setEditingId(null);
+
   return (
     <div>
       {items && items.length > 0 && (
@@ -208,17 +236,30 @@ function ScheduleSection({ showId, timezone }: { showId: string; timezone?: stri
             <span className="text-[11px] text-muted-foreground font-medium">All times in {timezone ? getTimezoneAbbr(timezone) : "local time"}</span>
           </div>
           {items.map(item => (
-            <div key={item.id} className="flex items-center justify-between px-4 py-3 border-b last:border-b-0">
-              <div className="flex items-center gap-3">
-                <span className="w-[72px] text-xs font-medium tabular-nums text-muted-foreground">
-                  {item.starts_at ? formatTimeInZone(item.starts_at, timezone || "") : "—"}
-                </span>
-                <span className="text-sm">{item.title}</span>
+            editingId === item.id ? (
+              <div key={item.id} className="px-4 py-3 border-b last:border-b-0 space-y-2">
+                <div className="flex gap-2">
+                  <Input type="time" value={editTime} onChange={e => setEditTime(e.target.value)} className="h-9 w-28 rounded-xl" />
+                  <Input value={editTitle} onChange={e => setEditTitle(e.target.value)} className="h-9 flex-1 rounded-xl" autoFocus />
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" className="rounded-xl h-7 text-xs" onClick={handleSave} disabled={update.isPending || !editTitle.trim()}><Check className="h-3 w-3 mr-1" /> Save</Button>
+                  <Button size="sm" variant="ghost" className="rounded-xl h-7 text-xs" onClick={cancelEdit}><X className="h-3 w-3 mr-1" /> Cancel</Button>
+                </div>
               </div>
-              <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive shrink-0" onClick={() => remove.mutate({ id: item.id, showId })}>
-                <Trash2 className="h-3 w-3" />
-              </Button>
-            </div>
+            ) : (
+              <div key={item.id} className="flex items-center justify-between px-4 py-3 border-b last:border-b-0 cursor-pointer hover:bg-muted/20 transition-colors" onClick={() => startEdit(item)}>
+                <div className="flex items-center gap-3">
+                  <span className="w-[72px] text-xs font-medium tabular-nums text-muted-foreground">
+                    {item.starts_at ? formatTimeInZone(item.starts_at, timezone || "") : "—"}
+                  </span>
+                  <span className="text-sm">{item.title}</span>
+                </div>
+                <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive shrink-0" onClick={(e) => { e.stopPropagation(); remove.mutate({ id: item.id, showId }); }}>
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </div>
+            )
           ))}
         </div>
       )}

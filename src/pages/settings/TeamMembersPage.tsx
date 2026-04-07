@@ -149,6 +149,16 @@ export default function TeamMembersPage() {
     qc.invalidateQueries({ queryKey: ["org-members"] });
   };
 
+  const handleRoleChange = async (memberId: string, newRole: string) => {
+    const { error } = await supabase
+      .from("organization_members")
+      .update({ role: newRole as any })
+      .eq("id", memberId);
+    if (error) { toast.error("Failed to update role"); return; }
+    toast.success("Role updated");
+    qc.invalidateQueries({ queryKey: ["org-members"] });
+  };
+
   const roleColors: Record<string, "accent" | "success" | "warning" | "muted" | "destructive"> = {
     owner: "accent", admin: "success", tm: "warning", member: "muted", crew: "muted", readonly: "muted",
   };
@@ -258,8 +268,23 @@ export default function TeamMembersPage() {
                   
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <StatusChip label={m.role} variant={roleColors[m.role] || "muted"} />
-                  {isAdmin && m.role !== "owner" && (
+                  {isAdmin && m.role !== "owner" && m.user_id !== user?.id ? (
+                    <Select value={m.role} onValueChange={(val) => handleRoleChange(m.id, val)}>
+                      <SelectTrigger className="h-7 w-24 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="admin">Admin</SelectItem>
+                        <SelectItem value="tm">TM</SelectItem>
+                        <SelectItem value="member">Member</SelectItem>
+                        <SelectItem value="crew">Crew</SelectItem>
+                        <SelectItem value="readonly">Read-only</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <StatusChip label={m.role} variant={roleColors[m.role] || "muted"} />
+                  )}
+                  {isAdmin && m.role !== "owner" && m.user_id !== user?.id && (
                     <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive"
                       onClick={() => handleRemove(m.id, (m as any).profile?.full_name || "this member")}>
                       <Trash2 className="h-3.5 w-3.5" />

@@ -146,6 +146,8 @@ export function CreateTravelModal({ open, onOpenChange, tourId, defaultDate, def
           confirmation_number: confirmationNumber || null,
           traveler_name: travelerName || null,
           travel_subtype: tripType,
+          departure_timezone: departureTimezone,
+          arrival_timezone: arrivalTimezone,
         } as any).select().single().throwOnError();
 
         if (tripType === "round_trip" && returnDepartureDate) {
@@ -166,6 +168,8 @@ export function CreateTravelModal({ open, onOpenChange, tourId, defaultDate, def
             traveler_name: travelerName || null,
             travel_subtype: "round_trip",
             linked_item_id: outbound.data?.id || null,
+            departure_timezone: arrivalTimezone,
+            arrival_timezone: departureTimezone,
           } as any).throwOnError();
         }
       } else {
@@ -186,6 +190,8 @@ export function CreateTravelModal({ open, onOpenChange, tourId, defaultDate, def
           confirmation_number: rentalConfirmation || null,
           traveler_name: travelerName || null,
           travel_subtype: tripType,
+          departure_timezone: departureTimezone,
+          arrival_timezone: arrivalTimezone,
         } as any).select().single().throwOnError();
 
         if (arrivalDate) {
@@ -207,6 +213,8 @@ export function CreateTravelModal({ open, onOpenChange, tourId, defaultDate, def
             traveler_name: travelerName || null,
             travel_subtype: tripType,
             linked_item_id: pickup.data?.id || null,
+            departure_timezone: tripType === "round_trip" ? arrivalTimezone : departureTimezone,
+            arrival_timezone: tripType === "round_trip" ? departureTimezone : arrivalTimezone,
           } as any).throwOnError();
         }
       }

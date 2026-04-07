@@ -1,42 +1,37 @@
 
 
-# Fix Off-Day Click-Through in Non-Sortable Rendering
+# Show Timezone Display and Schedule Time Formatting
 
-## Problem
+## Problems
 
-There are two code paths that render off-day items on the tour timeline:
-1. **Sortable path** (lines 97-112) — used when multiple items exist on the same day. This one correctly has `onClick={() => navigate(`/off-day/${item.id}`)}` and a chevron.
-2. **Non-sortable path** (lines 479-483) — used when there's only one item on that day. This renders a plain static `<div>` with no click handler, so tapping does nothing.
+1. **Timezone not showing on schedule**: The banner "All times in ..." only renders when the show has a `timezone` value. Shows created before the timezone feature was added have `null` in that column, so no banner appears.
+
+2. **Schedule times not formatted with timezone**: Line 216 tries `parseISO(item.starts_at)` on a plain time string like `"22:00"`, which fails. The catch fallback just shows the raw string `"22:00"` instead of a nicely formatted `"10:00 PM ET"`.
+
+3. **No timezone displayed inline with times**: Even when the timezone is set, individual schedule item times don't show the timezone abbreviation.
 
 ## Fix
 
-**`src/pages/TourDetailPage.tsx`** (lines 479-483):
-- Replace the static `<div>` with a `<button>` that navigates to `/off-day/${item.id}`
-- Add a `<ChevronRight>` icon to indicate it's tappable
-- Match the styling from the sortable version (line 104-111)
+### `src/pages/ShowDetailPage.tsx` — ScheduleSection
 
-Change from:
-```tsx
-<div className="flex items-center gap-2 py-2 text-sm text-muted-foreground">
-  <Coffee className="h-3.5 w-3.5" />
-  <span>Day off</span>
-</div>
-```
+- Replace the time formatting logic (line 216) to use `formatTimeInZone` from `timezones.ts` instead of `parseISO`. This turns `"22:00"` into `"10:00 PM"`.
+- Append the timezone abbreviation inline when the show has a timezone (e.g. `"10:00 PM ET"`).
+- Keep the banner as-is for context, but also make it show a fallback like "Local time" when no timezone is stored.
 
-To:
-```tsx
-<button
-  onClick={() => navigate(`/off-day/${item.id}`)}
-  className="flex items-center gap-2 py-2 text-sm text-muted-foreground press-scale active:text-foreground transition-colors"
->
-  <Coffee className="h-3.5 w-3.5" />
-  <span>Day off</span>
-  <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50" />
-</button>
-```
+### `src/pages/ShowDetailPage.tsx` — Show header area
+
+- Display the show's timezone abbreviation somewhere visible near the date/venue info so users always know which timezone applies. A small chip or label like `"ET"` next to the date.
+
+### No other file changes needed
+
+- The `CreateShowModal` already has a timezone picker.
+- The `EditShowModal` already has a timezone picker.
+- The `useCreateShow` mutation already passes `timezone`.
+- The database column already exists.
 
 ## Files
+
 | File | Change |
 |------|--------|
-| `src/pages/TourDetailPage.tsx` | Make non-sortable off-day row clickable |
+| `src/pages/ShowDetailPage.tsx` | Fix schedule time formatting to use `formatTimeInZone`, show timezone abbreviation inline with times, show timezone label in header |
 

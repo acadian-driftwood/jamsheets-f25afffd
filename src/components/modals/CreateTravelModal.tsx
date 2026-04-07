@@ -86,7 +86,8 @@ export function CreateTravelModal({ open, onOpenChange, tourId, defaultDate, def
     setTravelType(defaultSubtype ? resolveType(defaultSubtype) : "driving");
     setTripType("one_way");
     setTitle(""); setDepartureLocation(""); setArrivalLocation("");
-    setDepartureDate(""); setDepartureTime(""); setArrivalDate(""); setArrivalTime("");
+    setDepartureDate(""); setDepartureTime(""); setDepartureTimezone(getLocalTimezone());
+    setArrivalDate(""); setArrivalTime(""); setArrivalTimezone(getLocalTimezone());
     setNotes(""); setTravelerName(""); setAirline(""); setConfirmationNumber("");
     setReturnDepartureDate(""); setReturnDepartureTime(""); setReturnArrivalDate(""); setReturnArrivalTime("");
     setRentalCompany(""); setRentalConfirmation("");

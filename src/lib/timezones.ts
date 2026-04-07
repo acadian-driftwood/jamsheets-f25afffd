@@ -56,9 +56,30 @@ export function getTimezoneAbbr(timezone: string): string {
 
 export function formatTimeInZone(time: string, timezone: string): string {
   try {
-    // time is "HH:mm" — create a date object and format in the target timezone
-    // Since it's just a display time (already in the target timezone), just format it nicely
+    // Check if it's a full timestamp (contains a date portion or "T")
+    if (time.includes("T") || time.includes(" ") && time.length > 8) {
+      // Full timestamp — parse as Date and format in the target timezone
+      const date = new Date(time.replace(" ", "T").replace(/\+(\d{2})$/, "+$1:00"));
+      if (isNaN(date.getTime())) throw new Error("Invalid date");
+      if (timezone) {
+        const formatter = new Intl.DateTimeFormat("en-US", {
+          timeZone: timezone,
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
+        });
+        return formatter.format(date);
+      }
+      // No timezone — format in UTC
+      const h = date.getUTCHours();
+      const m = date.getUTCMinutes();
+      const period = h >= 12 ? "PM" : "AM";
+      const hour12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+      return `${hour12}:${m.toString().padStart(2, "0")} ${period}`;
+    }
+    // Simple "HH:mm" format
     const [h, m] = time.split(":").map(Number);
+    if (isNaN(h) || isNaN(m)) throw new Error("Invalid time");
     const period = h >= 12 ? "PM" : "AM";
     const hour12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
     return `${hour12}:${m.toString().padStart(2, "0")} ${period}`;

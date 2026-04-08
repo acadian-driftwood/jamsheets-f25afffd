@@ -320,7 +320,7 @@ export function useShowGuestList(showId: string) {
   return useQuery({
     queryKey: ["show-guests", showId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("show_guest_list_entries").select("*, requester:profiles!show_guest_list_entries_requested_by_fkey(full_name)").eq("show_id", showId).order("created_at");
+      const { data, error } = await supabase.from("show_guest_list_entries").select("*").eq("show_id", showId).order("created_at");
       if (error) throw error;
       return data;
     },

@@ -377,7 +377,7 @@ function GuestListSection({ showId }: { showId: string }) {
                 <div className="min-w-0">
                   <p className="text-sm font-medium truncate">{entry.guest_name}</p>
                   <p className="text-[11px] text-muted-foreground">
-                    +{entry.guest_count} · {entry.requested_by === user?.id ? "You" : (entry.requester as any)?.full_name || "Member"}
+                    +{entry.guest_count} · {entry.requested_by === user?.id ? "You" : "Member"}
                   </p>
                   {entry.notes && <p className="text-[11px] text-muted-foreground italic mt-0.5">{entry.notes}</p>}
                 </div>

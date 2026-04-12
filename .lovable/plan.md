@@ -1,32 +1,31 @@
 
 
-# Fix Hotel Info Not Saving / Displaying
+# Support Multiple Hotels Per Show
 
-## Root Cause
+## Problem
+The current implementation assumes one hotel per show — the hook returns a single hotel, the UI shows one card, and we just added a unique constraint on `show_hotels(show_id)` that actively prevents multiple entries.
 
-The `useShowHotel` hook uses `.maybeSingle()`, which throws an error when more than one row is returned. Show `72eeb527` already has **6 duplicate hotel records**, so the query fails silently and the hotel section appears empty. The user then tries to add a hotel again, creating yet another duplicate — a vicious cycle.
+## Plan
 
-The underlying issue: the data model assumes one hotel per show, but nothing enforces that constraint. Each "save" creates a new insert instead of updating the existing record (because the query fails, `hotel` is always `undefined`, so `hotel?.id` is never passed to the upsert).
+### 1. Database migration — Drop the unique constraint
+Remove the `show_hotels_show_id_unique` constraint we just added.
 
-## Fix
+### 2. `src/hooks/useData.ts` — Return an array of hotels
+- Rename `useShowHotel` → `useShowHotels` (return all hotels for a show, ordered by `created_at`)
+- Change query key from `"show-hotel"` to `"show-hotels"`
+- `useUpsertHotel` and `useDeleteHotel` — update invalidation query key to `"show-hotels"`
 
-### 1. `src/hooks/useData.ts` — Change `maybeSingle()` to `limit(1)` + first element
-
-Replace `.maybeSingle()` with `.order("created_at", { ascending: false }).limit(1)` and return `data?.[0] ?? null`. This prevents the query from throwing when duplicates exist, and always returns the most recent hotel record.
-
-### 2. Database migration — Add unique constraint and clean duplicates
-
-- Delete duplicate hotel rows, keeping only the most recent per show.
-- Add a unique constraint on `(show_id)` to prevent future duplicates.
-
-### 3. No UI changes needed
-
-The `HotelSection` component and `useUpsertHotel` logic are correct — they just never work because the query always fails on shows with duplicates.
+### 3. `src/pages/ShowDetailPage.tsx` — Render a list of hotel cards
+- **HotelSection**: Use `useShowHotels` to get an array. Map over hotels to render each as an individual card (with its own edit/delete). Each card tracks its own `editingId` state.
+- The "+ Add hotel" button is always visible at the bottom (not just when zero hotels exist).
+- Adding a new hotel never passes an `id`, so it always inserts.
+- **ReadinessBar**: Update to use `useShowHotels` and check `hotels?.length > 0` for the readiness dot.
 
 ## Files
 
 | File | Change |
 |------|--------|
-| `src/hooks/useData.ts` | Replace `.maybeSingle()` with `.limit(1)` + array access in `useShowHotel` |
-| Migration | Clean duplicate hotel rows, add unique constraint on `show_hotels(show_id)` |
+| Migration | `ALTER TABLE show_hotels DROP CONSTRAINT show_hotels_show_id_unique` |
+| `src/hooks/useData.ts` | Rename hook, return array, update query keys |
+| `src/pages/ShowDetailPage.tsx` | Render list of hotel cards, always show "+ Add hotel" |
 

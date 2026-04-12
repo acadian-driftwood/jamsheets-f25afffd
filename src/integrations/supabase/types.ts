@@ -391,7 +391,7 @@ export type Database = {
           {
             foreignKeyName: "show_hotels_show_id_fkey"
             columns: ["show_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "shows"
             referencedColumns: ["id"]
           },

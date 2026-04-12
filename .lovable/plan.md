@@ -1,45 +1,32 @@
 
 
-# Fix Guest List Not Displaying
+# Fix Hotel Info Not Saving / Displaying
 
-## Problem
+## Root Cause
 
-The `useShowGuestList` query joins on `profiles!show_guest_list_entries_requested_by_fkey`, but the foreign key `show_guest_list_entries_requested_by_fkey` actually references `auth.users`, not `public.profiles`. This causes the PostgREST query to fail silently (or return an error that React Query swallows), so `guests` stays `undefined` and nothing renders.
+The `useShowHotel` hook uses `.maybeSingle()`, which throws an error when more than one row is returned. Show `72eeb527` already has **6 duplicate hotel records**, so the query fails silently and the hotel section appears empty. The user then tries to add a hotel again, creating yet another duplicate — a vicious cycle.
+
+The underlying issue: the data model assumes one hotel per show, but nothing enforces that constraint. Each "save" creates a new insert instead of updating the existing record (because the query fails, `hotel` is always `undefined`, so `hotel?.id` is never passed to the upsert).
 
 ## Fix
 
-### `src/hooks/useData.ts` — Fix the join in `useShowGuestList`
+### 1. `src/hooks/useData.ts` — Change `maybeSingle()` to `limit(1)` + first element
 
-Replace the explicit FK hint `profiles!show_guest_list_entries_requested_by_fkey` with a manual approach: fetch guest entries without the join, then look up requester names separately — or, more simply, remove the FK hint and use the correct relationship.
+Replace `.maybeSingle()` with `.order("created_at", { ascending: false }).limit(1)` and return `data?.[0] ?? null`. This prevents the query from throwing when duplicates exist, and always returns the most recent hotel record.
 
-Since `requested_by` references `auth.users` (not `profiles`), PostgREST cannot auto-join to `profiles` via that FK. Two options:
+### 2. Database migration — Add unique constraint and clean duplicates
 
-**Option A (recommended)**: Remove the embedded join entirely. Fetch guest entries plain, and separately resolve requester names from the `profiles` table using the `requested_by` UUIDs. This avoids FK dependency issues.
+- Delete duplicate hotel rows, keeping only the most recent per show.
+- Add a unique constraint on `(show_id)` to prevent future duplicates.
 
-**Option B**: Add a new FK from `show_guest_list_entries.requested_by` to `profiles.id` (since `profiles.id` mirrors `auth.users.id`). Then the existing join syntax would work. This requires a migration.
+### 3. No UI changes needed
 
-I recommend **Option A** — it's simpler and doesn't require a database change.
-
-The query becomes:
-```ts
-const { data, error } = await supabase
-  .from("show_guest_list_entries")
-  .select("*")
-  .eq("show_id", showId)
-  .order("created_at");
-```
-
-Then in `GuestListSection`, replace `(entry.requester as any)?.full_name` with a lookup or just show "Member" for non-self entries. Alternatively, do a second query for profiles.
-
-**Simplest path**: Just drop the join. The only place `requester` is used is line 380, which already falls back to `"Member"`. Self-requests show "You" via the `user.id` check. So removing the join loses nothing meaningful.
-
-### No other changes needed
-
-The rendering logic in `GuestListSection` is correct — it just never gets data because the query fails.
+The `HotelSection` component and `useUpsertHotel` logic are correct — they just never work because the query always fails on shows with duplicates.
 
 ## Files
 
 | File | Change |
 |------|--------|
-| `src/hooks/useData.ts` | Remove the broken `profiles` join from `useShowGuestList`, select `*` only |
+| `src/hooks/useData.ts` | Replace `.maybeSingle()` with `.limit(1)` + array access in `useShowHotel` |
+| Migration | Clean duplicate hotel rows, add unique constraint on `show_hotels(show_id)` |
 

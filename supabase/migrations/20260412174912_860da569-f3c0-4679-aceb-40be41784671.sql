@@ -1,0 +1,1 @@
+ALTER TABLE public.show_hotels DROP CONSTRAINT show_hotels_show_id_unique;

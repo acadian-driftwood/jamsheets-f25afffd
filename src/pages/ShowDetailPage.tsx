@@ -12,7 +12,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
   useShow, useUpdateShow,
   useShowSchedule, useCreateScheduleItem, useUpdateScheduleItem, useDeleteScheduleItem,
-  useShowHotel, useUpsertHotel, useDeleteHotel,
+  useShowHotels, useUpsertHotel, useDeleteHotel,
   useShowContacts, useCreateContact, useDeleteContact,
   useShowGuestList, useRequestGuest, useUpdateGuestStatus, useDeleteGuest,
   
@@ -33,14 +33,14 @@ import { ShowSwipeNav } from "@/components/tour/ShowSwipeNav";
 // ─── Readiness Indicator ─────────────────────────────────
 function ReadinessBar({ showId }: { showId: string }) {
   const { data: schedule } = useShowSchedule(showId);
-  const { data: hotel } = useShowHotel(showId);
+  const { data: hotels } = useShowHotels(showId);
   const { data: contacts } = useShowContacts(showId);
   const { data: guests } = useShowGuestList(showId);
   
 
   const items = [
     { label: "Schedule", ready: (schedule?.length || 0) > 0 },
-    { label: "Hotel", ready: !!hotel },
+    { label: "Hotel", ready: (hotels?.length || 0) > 0 },
     { label: "Contacts", ready: (contacts?.length || 0) > 0 },
     { label: "Guest List", ready: (guests?.length || 0) > 0 },
     
@@ -101,26 +101,34 @@ function PaidSection({ title, icon, children, defaultOpen, count }: { title: str
 
 // ─── Hotel Section ───────────────────────────────────────
 function HotelSection({ showId }: { showId: string }) {
-  const { data: hotel } = useShowHotel(showId);
+  const { data: hotels } = useShowHotels(showId);
   const upsert = useUpsertHotel();
   const remove = useDeleteHotel();
-  const [editing, setEditing] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null); // hotel id being edited, or "new" for adding
   const [form, setForm] = useState({ hotel_name: "", address: "", confirmation_number: "", check_in: "", check_out: "", notes: "" });
 
-  const startEdit = () => {
-    if (hotel) {
-      setForm({ hotel_name: hotel.hotel_name, address: hotel.address || "", confirmation_number: hotel.confirmation_number || "", check_in: hotel.check_in || "", check_out: hotel.check_out || "", notes: hotel.notes || "" });
-    } else {
-      setForm({ hotel_name: "", address: "", confirmation_number: "", check_in: "", check_out: "", notes: "" });
-    }
-    setEditing(true);
+  const startAdd = () => {
+    setForm({ hotel_name: "", address: "", confirmation_number: "", check_in: "", check_out: "", notes: "" });
+    setEditingId("new");
+  };
+
+  const startEdit = (hotel: NonNullable<typeof hotels>[number]) => {
+    setForm({
+      hotel_name: hotel.hotel_name,
+      address: hotel.address || "",
+      confirmation_number: hotel.confirmation_number || "",
+      check_in: hotel.check_in || "",
+      check_out: hotel.check_out || "",
+      notes: hotel.notes || "",
+    });
+    setEditingId(hotel.id);
   };
 
   const handleSave = async () => {
     if (!form.hotel_name.trim()) return;
     try {
       await upsert.mutateAsync({
-        id: hotel?.id,
+        id: editingId !== "new" ? editingId! : undefined,
         show_id: showId,
         hotel_name: form.hotel_name.trim(),
         address: form.address.trim() || null,
@@ -130,54 +138,61 @@ function HotelSection({ showId }: { showId: string }) {
         notes: form.notes.trim() || null,
       });
       toast.success("Hotel saved");
-      setEditing(false);
+      setEditingId(null);
     } catch { toast.error("Failed to save hotel"); }
   };
 
-  if (editing) {
-    return (
-      <div className="space-y-3">
-        <Input placeholder="Hotel name" value={form.hotel_name} onChange={e => setForm({ ...form, hotel_name: e.target.value })} className="h-11 rounded-xl" autoFocus />
-        <Input placeholder="Address" value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} className="h-11 rounded-xl" />
-        <Input placeholder="Confirmation #" value={form.confirmation_number} onChange={e => setForm({ ...form, confirmation_number: e.target.value })} className="h-11 rounded-xl" />
-        <div className="grid grid-cols-2 gap-2">
-          <Input placeholder="Check-in time" value={form.check_in} onChange={e => setForm({ ...form, check_in: e.target.value })} className="h-11 rounded-xl" />
-          <Input placeholder="Check-out time" value={form.check_out} onChange={e => setForm({ ...form, check_out: e.target.value })} className="h-11 rounded-xl" />
-        </div>
-        <Textarea placeholder="Notes" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} className="rounded-xl" />
-        <div className="flex gap-2">
-          <Button size="sm" className="rounded-xl" onClick={handleSave} disabled={upsert.isPending || !form.hotel_name.trim()}>
-            <Check className="h-3.5 w-3.5 mr-1" /> Save
-          </Button>
-          <Button size="sm" variant="ghost" className="rounded-xl" onClick={() => setEditing(false)}><X className="h-3.5 w-3.5 mr-1" /> Cancel</Button>
-        </div>
+  const renderForm = () => (
+    <div className="space-y-3">
+      <Input placeholder="Hotel name" value={form.hotel_name} onChange={e => setForm({ ...form, hotel_name: e.target.value })} className="h-11 rounded-xl" autoFocus />
+      <Input placeholder="Address" value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} className="h-11 rounded-xl" />
+      <Input placeholder="Confirmation #" value={form.confirmation_number} onChange={e => setForm({ ...form, confirmation_number: e.target.value })} className="h-11 rounded-xl" />
+      <div className="grid grid-cols-2 gap-2">
+        <Input placeholder="Check-in time" value={form.check_in} onChange={e => setForm({ ...form, check_in: e.target.value })} className="h-11 rounded-xl" />
+        <Input placeholder="Check-out time" value={form.check_out} onChange={e => setForm({ ...form, check_out: e.target.value })} className="h-11 rounded-xl" />
       </div>
-    );
-  }
-
-  if (!hotel) {
-    return (
-      <button onClick={startEdit} className="text-xs text-accent font-medium hover:underline">
-        + Add hotel
-      </button>
-    );
-  }
+      <Textarea placeholder="Notes" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} className="rounded-xl" />
+      <div className="flex gap-2">
+        <Button size="sm" className="rounded-xl" onClick={handleSave} disabled={upsert.isPending || !form.hotel_name.trim()}>
+          <Check className="h-3.5 w-3.5 mr-1" /> Save
+        </Button>
+        <Button size="sm" variant="ghost" className="rounded-xl" onClick={() => setEditingId(null)}><X className="h-3.5 w-3.5 mr-1" /> Cancel</Button>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="rounded-2xl border bg-card p-4 relative">
-      <div className="absolute top-3 right-3 flex gap-1">
-        <Button size="icon" variant="ghost" className="h-7 w-7" onClick={startEdit}><Edit2 className="h-3 w-3" /></Button>
-        <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={async () => { await remove.mutateAsync({ id: hotel.id, showId }); toast.success("Hotel removed"); }}><Trash2 className="h-3 w-3" /></Button>
-      </div>
-      <p className="font-semibold text-sm">{hotel.hotel_name}</p>
-      {hotel.address && <p className="text-xs text-muted-foreground mt-0.5">{hotel.address}</p>}
-      {hotel.confirmation_number && <p className="text-xs text-muted-foreground">Conf #{hotel.confirmation_number}</p>}
-      <p className="text-xs text-muted-foreground">
-        {hotel.check_in && `In ${hotel.check_in}`}
-        {hotel.check_in && hotel.check_out && " · "}
-        {hotel.check_out && `Out ${hotel.check_out}`}
-      </p>
-      {hotel.notes && <p className="text-xs text-muted-foreground mt-1 italic">{hotel.notes}</p>}
+    <div>
+      {hotels && hotels.length > 0 && (
+        <div className="space-y-2 mb-3">
+          {hotels.map(hotel =>
+            editingId === hotel.id ? (
+              <div key={hotel.id}>{renderForm()}</div>
+            ) : (
+              <div key={hotel.id} className="rounded-2xl border bg-card p-4 relative">
+                <div className="absolute top-3 right-3 flex gap-1">
+                  <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => startEdit(hotel)}><Edit2 className="h-3 w-3" /></Button>
+                  <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={async () => { await remove.mutateAsync({ id: hotel.id, showId }); toast.success("Hotel removed"); }}><Trash2 className="h-3 w-3" /></Button>
+                </div>
+                <p className="font-semibold text-sm">{hotel.hotel_name}</p>
+                {hotel.address && <p className="text-xs text-muted-foreground mt-0.5">{hotel.address}</p>}
+                {hotel.confirmation_number && <p className="text-xs text-muted-foreground">Conf #{hotel.confirmation_number}</p>}
+                <p className="text-xs text-muted-foreground">
+                  {hotel.check_in && `In ${hotel.check_in}`}
+                  {hotel.check_in && hotel.check_out && " · "}
+                  {hotel.check_out && `Out ${hotel.check_out}`}
+                </p>
+                {hotel.notes && <p className="text-xs text-muted-foreground mt-1 italic">{hotel.notes}</p>}
+              </div>
+            )
+          )}
+        </div>
+      )}
+      {editingId === "new" ? renderForm() : (
+        <button onClick={startAdd} className="text-xs text-accent font-medium hover:underline">
+          + Add hotel
+        </button>
+      )}
     </div>
   );
 }

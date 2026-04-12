@@ -231,14 +231,14 @@ export function useDeleteScheduleItem() {
   });
 }
 
-// ─── Show Hotel ──────────────────────────────────────────
-export function useShowHotel(showId: string) {
+// ─── Show Hotels ─────────────────────────────────────────
+export function useShowHotels(showId: string) {
   return useQuery({
-    queryKey: ["show-hotel", showId],
+    queryKey: ["show-hotels", showId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("show_hotels").select("*").eq("show_id", showId).order("created_at", { ascending: false }).limit(1);
+      const { data, error } = await supabase.from("show_hotels").select("*").eq("show_id", showId).order("created_at", { ascending: true });
       if (error) throw error;
-      return data?.[0] ?? null;
+      return data ?? [];
     },
     enabled: !!showId,
   });
@@ -260,7 +260,7 @@ export function useUpsertHotel() {
         return data;
       }
     },
-    onSuccess: (data) => qc.invalidateQueries({ queryKey: ["show-hotel", data.show_id] }),
+    onSuccess: (data) => qc.invalidateQueries({ queryKey: ["show-hotels", data.show_id] }),
   });
 }
 
@@ -272,7 +272,7 @@ export function useDeleteHotel() {
       if (error) throw error;
       return showId;
     },
-    onSuccess: (showId) => qc.invalidateQueries({ queryKey: ["show-hotel", showId] }),
+    onSuccess: (showId) => qc.invalidateQueries({ queryKey: ["show-hotels", showId] }),
   });
 }
 

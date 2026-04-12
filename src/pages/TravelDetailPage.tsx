@@ -111,6 +111,17 @@ export default function TravelDetailPage() {
         </div>
 
         <div className="divide-y divide-border">
+          {/* For flights, show title as Passenger */}
+          {item.type === "flight" && (
+            <InfoRow icon={User} label="Passenger" value={item.title} />
+          )}
+          {item.type !== "flight" && item.title && (
+            <InfoRow icon={FileText} label="Title" value={item.title} />
+          )}
+          {/* For non-flights, show traveler name if present */}
+          {item.type !== "flight" && item.traveler_name && (
+            <InfoRow icon={User} label="Traveler" value={item.traveler_name} />
+          )}
           {item.departure_location && (
             <InfoRow icon={MapPin} label="From" value={item.departure_location} />
           )}
@@ -131,9 +142,6 @@ export default function TravelDetailPage() {
           )}
           {item.confirmation_number && (
             <InfoRow icon={Hash} label="Confirmation #" value={item.confirmation_number} />
-          )}
-          {item.traveler_name && (
-            <InfoRow icon={User} label="Traveler" value={item.traveler_name} />
           )}
           {item.notes && (
             <InfoRow icon={FileText} label="Notes" value={item.notes} />

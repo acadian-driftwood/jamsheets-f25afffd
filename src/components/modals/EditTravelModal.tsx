@@ -119,14 +119,16 @@ export function EditTravelModal({ open, onOpenChange, item }: Props) {
 
         <div className="space-y-4 mt-2">
           <div>
-            <label className="mb-1.5 block text-sm font-medium">Title</label>
+            <label className="mb-1.5 block text-sm font-medium">{isFlightType ? "Passenger" : "Title"}</label>
             <Input value={title} onChange={e => setTitle(e.target.value)} />
           </div>
 
+          {!isFlightType && (
           <div>
             <label className="mb-1.5 block text-sm font-medium">Traveler</label>
             <Input value={travelerName} onChange={e => setTravelerName(e.target.value)} placeholder="Who is traveling?" />
           </div>
+          )}
 
           {isFlightType && (
             <>

@@ -270,14 +270,16 @@ export function CreateTravelModal({ open, onOpenChange, tourId, defaultDate, def
             )}
 
             <div>
-              <label className="mb-1.5 block text-sm font-medium">Title</label>
+              <label className="mb-1.5 block text-sm font-medium">{travelType === "flight" ? "Passenger" : "Title"}</label>
               <Input value={title} onChange={e => setTitle(e.target.value)} placeholder={travelType === "driving" ? "Drive to venue" : travelType === "flight" ? "Flight to NYC" : "Rental Car"} />
             </div>
 
+            {travelType !== "flight" && (
             <div>
               <label className="mb-1.5 block text-sm font-medium">Traveler</label>
               <Input value={travelerName} onChange={e => setTravelerName(e.target.value)} placeholder="Who is traveling?" />
             </div>
+            )}
 
             {travelType === "flight" && (
               <>

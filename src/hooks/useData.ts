@@ -236,9 +236,9 @@ export function useShowHotel(showId: string) {
   return useQuery({
     queryKey: ["show-hotel", showId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("show_hotels").select("*").eq("show_id", showId).maybeSingle();
+      const { data, error } = await supabase.from("show_hotels").select("*").eq("show_id", showId).order("created_at", { ascending: false }).limit(1);
       if (error) throw error;
-      return data;
+      return data?.[0] ?? null;
     },
     enabled: !!showId,
   });

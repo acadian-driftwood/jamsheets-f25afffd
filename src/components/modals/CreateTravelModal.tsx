@@ -194,7 +194,8 @@ export function CreateTravelModal({ open, onOpenChange, tourId, defaultDate, def
           arrival_timezone: arrivalTimezone,
         } as any).select().single().throwOnError();
 
-        if (arrivalDate) {
+        const dropoffDate = tripType === "round_trip" ? returnDepartureDate : arrivalDate;
+        if (dropoffDate) {
           const dropoffType = tripType === "round_trip" ? "rental_return" : "rental_dropoff";
           await supabase.from("tour_timeline_items").insert({
             tour_id: tourId,
@@ -202,7 +203,7 @@ export function CreateTravelModal({ open, onOpenChange, tourId, defaultDate, def
             type: dropoffType as any,
             title: `${title || "Rental Car"} ${tripType === "round_trip" ? "Return" : "Dropoff"}`,
             subtitle: tripType === "round_trip" ? departureLocation || undefined : arrivalLocation || undefined,
-            date: tripType === "round_trip" && returnDepartureDate ? returnDepartureDate : arrivalDate,
+            date: dropoffDate,
             time_start: tripType === "round_trip" && returnDepartureTime ? returnDepartureTime : arrivalTime || null,
             time_end: null,
             notes: null,

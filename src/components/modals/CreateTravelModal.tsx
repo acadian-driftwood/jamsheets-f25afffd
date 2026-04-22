@@ -366,7 +366,7 @@ export function CreateTravelModal({ open, onOpenChange, tourId, defaultDate, def
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="mb-1.5 block text-sm font-medium">Return Date</label>
+                    <label className="mb-1.5 block text-sm font-medium">{travelType === "rental" ? "Dropoff Date" : "Return Date"}</label>
                     <Input type="date" value={returnDepartureDate} onChange={e => setReturnDepartureDate(e.target.value)} />
                   </div>
                   <div>
@@ -374,16 +374,18 @@ export function CreateTravelModal({ open, onOpenChange, tourId, defaultDate, def
                     <Input type="time" value={returnDepartureTime} onChange={e => setReturnDepartureTime(e.target.value)} />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="mb-1.5 block text-sm font-medium">Arrival Date</label>
-                    <Input type="date" value={returnArrivalDate} onChange={e => setReturnArrivalDate(e.target.value)} />
+                {travelType !== "rental" && (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="mb-1.5 block text-sm font-medium">Arrival Date</label>
+                      <Input type="date" value={returnArrivalDate} onChange={e => setReturnArrivalDate(e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-sm font-medium">Time</label>
+                      <Input type="time" value={returnArrivalTime} onChange={e => setReturnArrivalTime(e.target.value)} />
+                    </div>
                   </div>
-                  <div>
-                    <label className="mb-1.5 block text-sm font-medium">Time</label>
-                    <Input type="time" value={returnArrivalTime} onChange={e => setReturnArrivalTime(e.target.value)} />
-                  </div>
-                </div>
+                )}
               </>
             )}
 

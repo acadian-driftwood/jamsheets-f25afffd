@@ -1,0 +1,1 @@
+DELETE FROM public.tour_timeline_items WHERE id = 'b8502a6d-acd4-4ff8-b1b1-3dff6f31008a';

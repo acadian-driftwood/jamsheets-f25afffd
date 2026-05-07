@@ -563,6 +563,7 @@ export default function TourDetailPage() {
       <CreateShowModal open={showCreate} onOpenChange={setShowCreate} defaultTourId={id} defaultDate={selectedDate || undefined} />
       {id && <CreateTravelModal open={showTravel} onOpenChange={setShowTravel} tourId={id} defaultDate={selectedDate || undefined} defaultSubtype={travelSubtype} />}
       {id && <CreateDayOffModal open={showDayOff} onOpenChange={setShowDayOff} tourId={id} defaultDate={selectedDate || undefined} />}
+      {id && <CreateHotelModal open={showHotel} onOpenChange={setShowHotel} tourId={id} defaultDate={selectedDate || undefined} />}
       {tour && <EditTourModal open={showEdit} onOpenChange={setShowEdit} tour={tour} />}
       <QuickAddSheet
         open={quickAddOpen}

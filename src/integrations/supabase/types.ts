@@ -690,6 +690,7 @@ export type Database = {
           date: string
           departure_location: string | null
           departure_timezone: string | null
+          end_date: string | null
           id: string
           linked_item_id: string | null
           notes: string | null
@@ -715,6 +716,7 @@ export type Database = {
           date: string
           departure_location?: string | null
           departure_timezone?: string | null
+          end_date?: string | null
           id?: string
           linked_item_id?: string | null
           notes?: string | null
@@ -740,6 +742,7 @@ export type Database = {
           date?: string
           departure_location?: string | null
           departure_timezone?: string | null
+          end_date?: string | null
           id?: string
           linked_item_id?: string | null
           notes?: string | null
@@ -891,6 +894,7 @@ export type Database = {
         | "rental_dropoff"
         | "driving"
         | "rental_return"
+        | "hotel"
       tour_status: "draft" | "active" | "completed" | "archived"
     }
     CompositeTypes: {
@@ -1036,6 +1040,7 @@ export const Constants = {
         "rental_dropoff",
         "driving",
         "rental_return",
+        "hotel",
       ],
       tour_status: ["draft", "active", "completed", "archived"],
     },

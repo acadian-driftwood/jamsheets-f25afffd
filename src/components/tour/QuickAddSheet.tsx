@@ -1,17 +1,18 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Music, Plane, Car, MapPin, Coffee } from "lucide-react";
+import { Music, Plane, Car, MapPin, Coffee, Hotel } from "lucide-react";
 
 interface QuickAddSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   date: string;
-  onSelect: (type: "show" | "flight" | "rental" | "driving" | "day_off") => void;
+  onSelect: (type: "show" | "flight" | "rental" | "driving" | "day_off" | "hotel") => void;
 }
 
 const options = [
   { type: "show" as const, label: "Show", icon: Music, description: "Add a gig or performance" },
   { type: "flight" as const, label: "Flight", icon: Plane, description: "One-way or round-trip flight" },
   { type: "rental" as const, label: "Rental Car", icon: Car, description: "Pickup and dropoff" },
+  { type: "hotel" as const, label: "Hotel", icon: Hotel, description: "Check-in and check-out" },
   { type: "driving" as const, label: "Drive", icon: MapPin, description: "Road travel between locations" },
   { type: "day_off" as const, label: "Day Off", icon: Coffee, description: "Rest or free day" },
 ];

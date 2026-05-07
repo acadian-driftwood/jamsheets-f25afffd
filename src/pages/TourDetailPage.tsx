@@ -4,12 +4,13 @@ import { EditTourModal } from "@/components/modals/EditTourModal";
 import { StatusChip } from "@/components/shared/StatusChip";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Button } from "@/components/ui/button";
-import { Plus, Music, Plane, Car, Coffee, MapPin, Pencil, ChevronRight, GripVertical } from "lucide-react";
+import { Plus, Music, Plane, Car, Coffee, MapPin, Pencil, ChevronRight, GripVertical, Hotel } from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useShows, useTourTimeline } from "@/hooks/useData";
 import { CreateShowModal } from "@/components/modals/CreateShowModal";
 import { CreateTravelModal } from "@/components/modals/CreateTravelModal";
 import { CreateDayOffModal } from "@/components/modals/CreateDayOffModal";
+import { CreateHotelModal } from "@/components/modals/CreateHotelModal";
 import { QuickAddSheet } from "@/components/tour/QuickAddSheet";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -155,6 +156,7 @@ export default function TourDetailPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [showTravel, setShowTravel] = useState(false);
   const [showDayOff, setShowDayOff] = useState(false);
+  const [showHotel, setShowHotel] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState("");
@@ -287,12 +289,14 @@ export default function TourDetailPage() {
     if (type === "flight") return Plane;
     if (type === "driving") return MapPin;
     if (type === "off_day") return Coffee;
+    if (type === "hotel") return Hotel;
     return Car;
   };
 
   const chipLabel = (type: string) => {
     if (type === "show") return "Show";
     if (type === "off_day") return "Day off";
+    if (type === "hotel") return "Hotel";
     return type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
   };
 
@@ -307,11 +311,13 @@ export default function TourDetailPage() {
     setQuickAddOpen(true);
   };
 
-  const handleQuickAddSelect = (type: "show" | "flight" | "rental" | "driving" | "day_off") => {
+  const handleQuickAddSelect = (type: "show" | "flight" | "rental" | "driving" | "day_off" | "hotel") => {
     if (type === "show") {
       setShowCreate(true);
     } else if (type === "day_off") {
       setShowDayOff(true);
+    } else if (type === "hotel") {
+      setShowHotel(true);
     } else {
       setTravelSubtype(type);
       setShowTravel(true);
@@ -557,6 +563,7 @@ export default function TourDetailPage() {
       <CreateShowModal open={showCreate} onOpenChange={setShowCreate} defaultTourId={id} defaultDate={selectedDate || undefined} />
       {id && <CreateTravelModal open={showTravel} onOpenChange={setShowTravel} tourId={id} defaultDate={selectedDate || undefined} defaultSubtype={travelSubtype} />}
       {id && <CreateDayOffModal open={showDayOff} onOpenChange={setShowDayOff} tourId={id} defaultDate={selectedDate || undefined} />}
+      {id && <CreateHotelModal open={showHotel} onOpenChange={setShowHotel} tourId={id} defaultDate={selectedDate || undefined} />}
       {tour && <EditTourModal open={showEdit} onOpenChange={setShowEdit} tour={tour} />}
       <QuickAddSheet
         open={quickAddOpen}

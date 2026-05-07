@@ -156,6 +156,7 @@ export default function TourDetailPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [showTravel, setShowTravel] = useState(false);
   const [showDayOff, setShowDayOff] = useState(false);
+  const [showHotel, setShowHotel] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState("");

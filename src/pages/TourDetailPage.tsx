@@ -10,6 +10,7 @@ import { useShows, useTourTimeline } from "@/hooks/useData";
 import { CreateShowModal } from "@/components/modals/CreateShowModal";
 import { CreateTravelModal } from "@/components/modals/CreateTravelModal";
 import { CreateDayOffModal } from "@/components/modals/CreateDayOffModal";
+import { CreateHotelModal } from "@/components/modals/CreateHotelModal";
 import { QuickAddSheet } from "@/components/tour/QuickAddSheet";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";

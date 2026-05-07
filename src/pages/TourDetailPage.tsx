@@ -289,12 +289,14 @@ export default function TourDetailPage() {
     if (type === "flight") return Plane;
     if (type === "driving") return MapPin;
     if (type === "off_day") return Coffee;
+    if (type === "hotel") return Hotel;
     return Car;
   };
 
   const chipLabel = (type: string) => {
     if (type === "show") return "Show";
     if (type === "off_day") return "Day off";
+    if (type === "hotel") return "Hotel";
     return type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
   };
 
@@ -309,11 +311,13 @@ export default function TourDetailPage() {
     setQuickAddOpen(true);
   };
 
-  const handleQuickAddSelect = (type: "show" | "flight" | "rental" | "driving" | "day_off") => {
+  const handleQuickAddSelect = (type: "show" | "flight" | "rental" | "driving" | "day_off" | "hotel") => {
     if (type === "show") {
       setShowCreate(true);
     } else if (type === "day_off") {
       setShowDayOff(true);
+    } else if (type === "hotel") {
+      setShowHotel(true);
     } else {
       setTravelSubtype(type);
       setShowTravel(true);

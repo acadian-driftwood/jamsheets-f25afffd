@@ -34,6 +34,13 @@ export default function LoginPage() {
         const { error } = await supabase.auth.signInWithOtp({ email });
         if (error) throw error;
         toast.success("Magic link sent! Check your email.");
+      } else if (mode === "forgot") {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (error) throw error;
+        toast.success("If an account exists for that email, we've sent a reset link.");
+        setMode("login");
       } else if (mode === "signup") {
         const { error } = await supabase.auth.signUp({
           email,

@@ -62,6 +62,7 @@ function AppRoutes() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/join" element={<JoinPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/unsubscribe" element={<UnsubscribePage />} />
       <Route path="/" element={<Navigate to="/today" replace />} />
       <Route

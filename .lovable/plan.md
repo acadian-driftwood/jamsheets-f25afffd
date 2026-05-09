@@ -1,52 +1,38 @@
-## Add "Hotel" to the tour timeline Quick Add menu
+# Forgot Password Flow
 
-Make hotels addable directly to a tour day (great for off-days and travel days), without touching the existing per-show hotel feature.
+Add a self-serve password recovery flow so users can reset their own passwords from the login screen.
 
-### Changes
+## What changes
 
-**1. Database — add new enum value**
-- Add `'hotel'` to the `timeline_item_type` enum (`ALTER TYPE ... ADD VALUE IF NOT EXISTS 'hotel'`).
-- No new columns needed; we reuse existing `tour_timeline_items` fields:
-  - `title` → hotel name
-  - `subtitle` → address (optional)
-  - `date` → check-in date
-  - `time_end` → unused; we'll store check-out date in a sensible existing field. Cleanest: reuse `arrival_location` for address and add nothing new — but to keep nights clear, store check-out date in `notes` is ugly.
-  - Decision: add a single nullable column `end_date date` to `tour_timeline_items` for hotel check-out (nullable, only used by hotel rows). This keeps it clean and doesn't disturb other types.
+### 1. `src/pages/LoginPage.tsx`
+- Add a fourth `mode`: `"forgot"` alongside `login | signup | magic`.
+- In `login` mode, show a small **"Forgot password?"** link directly under the password field (right-aligned, muted text, accent on hover).
+- In `forgot` mode:
+  - Show only the email field
+  - Submit calls `supabase.auth.resetPasswordForEmail(email, { redirectTo: ` `${window.location.origin}/reset-password` ` })`
+  - Toast: "If an account exists for that email, we've sent a reset link."
+  - Footer link: "Back to sign in" → returns to `login` mode
 
-**2. New component — `src/components/modals/CreateHotelModal.tsx`**
-Mirrors `CreateDayOffModal`. Fields:
-- Hotel name (required)
-- Check-in date (required, prefilled from selected day)
-- Check-out date (optional)
-- Address (optional)
-- Confirmation # (optional)
-- Notes (optional)
+### 2. New page `src/pages/ResetPasswordPage.tsx`
+- Public route (no `RequireAuth`).
+- Supabase auto-creates a recovery session when the user lands from the email link, so the page just needs to:
+  - Show two fields: New password, Confirm password (min 8 chars, must match)
+  - On submit: `supabase.auth.updateUser({ password })`
+  - On success: toast + `navigate("/today")` (they're already signed in via the recovery session)
+  - If no session is present after a short check, show a friendly "This reset link is invalid or has expired" with a button back to `/login`
+- Same minimal centered layout as `LoginPage` (logo, JamSheets header).
 
-Inserts a row into `tour_timeline_items` with `type: 'hotel'`, mapping fields as:
-- `title` = hotel name
-- `subtitle` = address
-- `date` = check-in
-- `end_date` = check-out
-- `confirmation_number`, `notes`
+### 3. `src/App.tsx`
+- Import `ResetPasswordPage`
+- Add `<Route path="/reset-password" element={<ResetPasswordPage />} />` alongside the other public routes (`/login`, `/join`, `/unsubscribe`).
 
-**3. `src/components/tour/QuickAddSheet.tsx`**
-- Add `"hotel"` option with the `Hotel` icon from lucide-react. Place it between "Rental Car" and "Drive".
-- Update `onSelect` union to include `"hotel"`.
+## What does not change
+- No auth config changes — Supabase recovery is already enabled by default.
+- No edge functions, no email template work. The default Lovable recovery email continues to be used (we can brand it later if you want).
+- No database migrations.
+- Existing login / signup / magic-link flows are untouched.
 
-**4. `src/pages/TourDetailPage.tsx`**
-- Add `showHotel` state and render `<CreateHotelModal>`.
-- Update `handleQuickAddSelect` union and route `"hotel"` → open hotel modal.
-- Update `typeIcon` (return `Hotel`), `chipLabel` ("Hotel"), `chipVariant` ("muted").
-
-**5. `src/components/modals/EditTravelModal.tsx`**
-- Out of scope for this change. Hotels added to the timeline will be editable in a follow-up; for now users can delete and re-add. (Confirm if you'd like edit support included.)
-
-### Not changed
-- `CreateShowModal` hotel section and `show_hotels` table — untouched, as you requested.
-- Travel modal, archiving, and timezone logic — unchanged.
-
-### Files touched
-- `supabase` migration (enum value + `end_date` column)
-- `src/components/tour/QuickAddSheet.tsx`
-- `src/components/modals/CreateHotelModal.tsx` (new)
-- `src/pages/TourDetailPage.tsx`
+## Files touched
+- `src/pages/LoginPage.tsx` (edit)
+- `src/pages/ResetPasswordPage.tsx` (new)
+- `src/App.tsx` (edit — one import + one route)

@@ -87,14 +87,33 @@ export default function LoginPage() {
             <label className="mb-1.5 block text-sm font-medium">Email</label>
             <Input type="email" placeholder="you@band.com" value={email} onChange={(e) => setEmail(e.target.value)} className="h-11" required />
           </div>
-          {mode !== "magic" && (
+          {mode !== "magic" && mode !== "forgot" && (
             <div>
-              <label className="mb-1.5 block text-sm font-medium">Password</label>
+              <div className="mb-1.5 flex items-center justify-between">
+                <label className="block text-sm font-medium">Password</label>
+                {mode === "login" && (
+                  <button
+                    type="button"
+                    onClick={() => setMode("forgot")}
+                    className="text-xs text-muted-foreground hover:text-accent hover:underline"
+                  >
+                    Forgot password?
+                  </button>
+                )}
+              </div>
               <Input type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="h-11" required />
             </div>
           )}
           <Button type="submit" className="h-11 w-full font-semibold" disabled={loading}>
-            {loading ? "Please wait..." : mode === "login" ? "Sign In" : mode === "signup" ? "Create Account" : "Send Magic Link"}
+            {loading
+              ? "Please wait..."
+              : mode === "login"
+              ? "Sign In"
+              : mode === "signup"
+              ? "Create Account"
+              : mode === "magic"
+              ? "Send Magic Link"
+              : "Send Reset Link"}
           </Button>
 
           <div className="flex items-center gap-2">

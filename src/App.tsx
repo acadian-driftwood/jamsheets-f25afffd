@@ -27,6 +27,7 @@ import OnboardingPage from "./pages/OnboardingPage";
 import NotFound from "./pages/NotFound";
 import JoinPage from "./pages/JoinPage";
 import UnsubscribePage from "./pages/UnsubscribePage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 
 const queryClient = new QueryClient();
 

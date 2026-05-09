@@ -14,7 +14,7 @@ export default function LoginPage() {
   const [searchParams] = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/today";
   const hasInvite = redirectTo.includes("/join");
-  const [mode, setMode] = useState<"login" | "signup" | "magic">(hasInvite ? "signup" : "login");
+  const [mode, setMode] = useState<"login" | "signup" | "magic" | "forgot">(hasInvite ? "signup" : "login");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();

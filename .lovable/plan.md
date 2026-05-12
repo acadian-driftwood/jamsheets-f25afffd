@@ -1,38 +1,23 @@
-# Forgot Password Flow
+## Problem
 
-Add a self-serve password recovery flow so users can reset their own passwords from the login screen.
+Past shows are still appearing on the **Shows** tab instead of moving to the Archive after 24 hours.
 
-## What changes
+The Archive page itself works correctly — `useArchivedShows` already returns shows where `date < yesterday`. The bug is in the **Shows** list, which uses `useShows()` (in `src/pages/ShowsPage.tsx`) and returns **every** show for the org regardless of date. There is no upcoming-only filter, so past shows just pile up at the top of the list.
 
-### 1. `src/pages/LoginPage.tsx`
-- Add a fourth `mode`: `"forgot"` alongside `login | signup | magic`.
-- In `login` mode, show a small **"Forgot password?"** link directly under the password field (right-aligned, muted text, accent on hover).
-- In `forgot` mode:
-  - Show only the email field
-  - Submit calls `supabase.auth.resetPasswordForEmail(email, { redirectTo: ` `${window.location.origin}/reset-password` ` })`
-  - Toast: "If an account exists for that email, we've sent a reset link."
-  - Footer link: "Back to sign in" → returns to `login` mode
+This matches the project rule "Auto-archiving of items > 24 hours past end date" — shows should disappear from the active Shows list once their date is more than ~24 hours in the past, while remaining visible in Archive.
 
-### 2. New page `src/pages/ResetPasswordPage.tsx`
-- Public route (no `RequireAuth`).
-- Supabase auto-creates a recovery session when the user lands from the email link, so the page just needs to:
-  - Show two fields: New password, Confirm password (min 8 chars, must match)
-  - On submit: `supabase.auth.updateUser({ password })`
-  - On success: toast + `navigate("/today")` (they're already signed in via the recovery session)
-  - If no session is present after a short check, show a friendly "This reset link is invalid or has expired" with a button back to `/login`
-- Same minimal centered layout as `LoginPage` (logo, JamSheets header).
+## Fix
 
-### 3. `src/App.tsx`
-- Import `ResetPasswordPage`
-- Add `<Route path="/reset-password" element={<ResetPasswordPage />} />` alongside the other public routes (`/login`, `/join`, `/unsubscribe`).
+**`src/pages/ShowsPage.tsx`** — filter the `useShows()` result before grouping/rendering so only shows with `date >= yesterday` (i.e. today and future, plus today-of-the-show through end of that day) appear. Yesterday is computed as `new Date(Date.now() - 86400000).toISOString().split("T")[0]`, mirroring `useArchivedShows` exactly so the two lists are perfectly complementary (no show shown in both, none lost between them).
 
-## What does not change
-- No auth config changes — Supabase recovery is already enabled by default.
-- No edge functions, no email template work. The default Lovable recovery email continues to be used (we can brand it later if you want).
-- No database migrations.
-- Existing login / signup / magic-link flows are untouched.
+The subtitle count (`${shows.length} upcoming`) will use the filtered length.
 
-## Files touched
-- `src/pages/LoginPage.tsx` (edit)
-- `src/pages/ResetPasswordPage.tsx` (new)
-- `src/App.tsx` (edit — one import + one route)
+## Out of scope
+
+- `useShows(tourId)` on TourDetailPage and ShowSwipeNav keeps returning all shows for that tour — past shows on a tour page are intentional context.
+- `ToursPage` show-count stays as-is (counts all shows on the tour).
+- No DB migration, no status column changes, no edge function — purely a frontend filter, matching how tours archiving already works.
+
+## Files
+
+- `src/pages/ShowsPage.tsx` (edit)

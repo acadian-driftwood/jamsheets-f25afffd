@@ -12,11 +12,15 @@ import { format, isToday, parseISO } from "date-fns";
 
 export default function ShowsPage() {
   const navigate = useNavigate();
-  const { data: shows, isLoading } = useShows();
+  const { data: allShows, isLoading } = useShows();
   const [showCreate, setShowCreate] = useState(false);
 
+  // Hide shows whose date is more than ~24h in the past (they appear in Archive)
+  const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+  const shows = (allShows || []).filter((s) => s.date >= yesterday);
+
   // Group shows by month
-  const grouped = (shows || []).reduce<Record<string, typeof shows>>((acc, show) => {
+  const grouped = shows.reduce<Record<string, typeof shows>>((acc, show) => {
     const key = format(parseISO(show.date + "T00:00:00"), "MMMM yyyy");
     if (!acc[key]) acc[key] = [];
     acc[key]!.push(show);
